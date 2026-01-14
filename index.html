@@ -1731,6 +1731,8 @@
             spawnTimer: 0,
             towerIdCounter: 0,
             activeAnimations: [],
+            hoverX: -1,
+            hoverY: -1,
             totalKills: 0,
             totalDamage: 0,
             lastFrameTime: 0
@@ -6221,6 +6223,35 @@
             }
         });
 
+        // Canvas mousemove handler for tower placement preview
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            gameState.hoverX = e.clientX - rect.left;
+            gameState.hoverY = e.clientY - rect.top;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            gameState.hoverX = -1;
+            gameState.hoverY = -1;
+        });
+
+        // Check if a position is valid for tower placement
+        function isValidPlacement(x, y) {
+            // Check distance from path
+            for (const point of gameState.path) {
+                if (Math.hypot(point.x - x, point.y - y) < 50) {
+                    return false;
+                }
+            }
+            // Check overlap with other towers
+            for (const tower of gameState.towers) {
+                if (Math.hypot(tower.x - x, tower.y - y) < 60) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         // Update enemy preview
         function updateEnemyPreview() {
             const previewList = document.getElementById('enemyPreviewList');
@@ -6339,7 +6370,72 @@
                     }
                 });
                 ctx.stroke();
-                
+
+                // Draw light grid lines for tower placement
+                const tileSize = 40;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+                ctx.lineWidth = 1;
+                // Vertical lines
+                for (let x = 0; x <= canvas.width; x += tileSize) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, canvas.height);
+                    ctx.stroke();
+                }
+                // Horizontal lines
+                for (let y = 0; y <= canvas.height; y += tileSize) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
+                    ctx.stroke();
+                }
+
+                // Draw tower placement preview when hovering with a Pokemon selected
+                if (gameState.selectedPokemon && gameState.hoverX >= 0 && gameState.hoverY >= 0) {
+                    const hoverTileX = Math.floor(gameState.hoverX / tileSize) * tileSize + tileSize / 2;
+                    const hoverTileY = Math.floor(gameState.hoverY / tileSize) * tileSize + tileSize / 2;
+
+                    const canPlace = isValidPlacement(hoverTileX, hoverTileY) && gameState.coins >= gameState.selectedPokemon.cost;
+
+                    // Draw faint tower preview
+                    ctx.save();
+                    ctx.globalAlpha = canPlace ? 0.5 : 0.25;
+
+                    // Draw range circle preview
+                    const rangeColor = canPlace ? 'rgba(100, 200, 100, 0.15)' : 'rgba(200, 100, 100, 0.15)';
+                    ctx.fillStyle = rangeColor;
+                    ctx.beginPath();
+                    ctx.arc(hoverTileX, hoverTileY, gameState.selectedPokemon.range, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = canPlace ? 'rgba(100, 200, 100, 0.4)' : 'rgba(200, 100, 100, 0.4)';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    // Draw tower base preview
+                    const baseColor = canPlace ? '#4CAF50' : '#F44336';
+                    ctx.fillStyle = baseColor;
+                    ctx.beginPath();
+                    ctx.arc(hoverTileX, hoverTileY, 25, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Draw Pokemon sprite preview if available
+                    const spriteUrl = SPRITE_URL + gameState.selectedPokemon.dexId + '.png';
+                    const previewSprite = new Image();
+                    previewSprite.src = spriteUrl;
+                    if (previewSprite.complete) {
+                        ctx.drawImage(previewSprite, hoverTileX - 32, hoverTileY - 32, 64, 64);
+                    }
+
+                    // Draw tile highlight
+                    const tileStartX = Math.floor(gameState.hoverX / tileSize) * tileSize;
+                    const tileStartY = Math.floor(gameState.hoverY / tileSize) * tileSize;
+                    ctx.strokeStyle = canPlace ? 'rgba(100, 255, 100, 0.6)' : 'rgba(255, 100, 100, 0.6)';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(tileStartX, tileStartY, tileSize, tileSize);
+
+                    ctx.restore();
+                }
+
                 // Spawn enemies
                 if (gameState.waveActive) {
                     gameState.spawnTimer++;
