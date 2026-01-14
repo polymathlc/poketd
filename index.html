@@ -1536,6 +1536,171 @@
             }
         }
 
+        // Skill definitions with animations and effects
+        const skillDatabase = {
+            // Fire skills
+            'Ember': { type: 'fire', dmgMult: 0.8, desc: 'Small fireball', effect: 'projectile', color: '#FF6B35' },
+            'Fire Fang': { type: 'fire', dmgMult: 1.0, desc: 'Biting flames', effect: 'melee', color: '#FF4500' },
+            'Flamethrower': { type: 'fire', dmgMult: 1.2, desc: 'Stream of fire', effect: 'beam', color: '#FF6B35' },
+            'Fire Blast': { type: 'fire', dmgMult: 1.5, desc: 'Explosive fire star', effect: 'explosion', color: '#FF4500' },
+            'Inferno': { type: 'fire', dmgMult: 1.4, desc: 'Intense flames, may burn', effect: 'aoe', status: 'burn', color: '#FF0000' },
+            'Heat Wave': { type: 'fire', dmgMult: 1.1, desc: 'Wave of heat hits all', effect: 'wave', color: '#FF6347' },
+            'Blaze Kick': { type: 'fire', dmgMult: 1.3, desc: 'Flaming kick attack', effect: 'melee', color: '#FF4500' },
+            'Overheat': { type: 'fire', dmgMult: 1.8, desc: 'Maximum power blast', effect: 'beam', color: '#FF0000' },
+
+            // Water skills
+            'Bubble': { type: 'water', dmgMult: 0.7, desc: 'Bubble projectiles', effect: 'projectile', color: '#4FC3F7' },
+            'Water Gun': { type: 'water', dmgMult: 0.8, desc: 'Water stream', effect: 'projectile', color: '#4FC3F7' },
+            'Water Pulse': { type: 'water', dmgMult: 1.0, desc: 'Pulsing water ring', effect: 'ring', color: '#00BFFF' },
+            'Hydro Pump': { type: 'water', dmgMult: 1.4, desc: 'High pressure blast', effect: 'beam', color: '#0077BE' },
+            'Surf': { type: 'water', dmgMult: 1.2, desc: 'Tidal wave attack', effect: 'wave', color: '#4FC3F7' },
+            'Aqua Jet': { type: 'water', dmgMult: 1.0, desc: 'Quick water dash', effect: 'dash', color: '#00BFFF' },
+            'Scald': { type: 'water', dmgMult: 1.1, desc: 'Hot water, may burn', effect: 'projectile', status: 'burn', color: '#87CEEB' },
+            'Hydro Cannon': { type: 'water', dmgMult: 1.8, desc: 'Devastating water cannon', effect: 'beam', color: '#0000FF' },
+            'Origin Pulse': { type: 'water', dmgMult: 2.0, desc: 'Primal water surge', effect: 'pulse', color: '#0077BE' },
+            'Water Spout': { type: 'water', dmgMult: 1.6, desc: 'Geyser eruption', effect: 'geyser', color: '#4FC3F7' },
+            'Muddy Water': { type: 'water', dmgMult: 1.2, desc: 'Muddy wave attack', effect: 'wave', color: '#8B7355' },
+
+            // Grass skills
+            'Vine Whip': { type: 'grass', dmgMult: 0.9, desc: 'Whipping vines', effect: 'whip', status: 'slow', color: '#228B22' },
+            'Razor Leaf': { type: 'grass', dmgMult: 1.0, desc: 'Sharp leaf barrage', effect: 'multi', color: '#32CD32' },
+            'Solar Beam': { type: 'grass', dmgMult: 1.6, desc: 'Charged sun beam', effect: 'beam', color: '#FFFF00' },
+            'Leaf Blade': { type: 'grass', dmgMult: 1.2, desc: 'Slashing leaf', effect: 'slash', color: '#228B22' },
+            'Leaf Storm': { type: 'grass', dmgMult: 1.5, desc: 'Leaf tornado', effect: 'storm', color: '#32CD32' },
+            'Energy Ball': { type: 'grass', dmgMult: 1.1, desc: 'Nature energy orb', effect: 'projectile', color: '#7CFC00' },
+            'Frenzy Plant': { type: 'grass', dmgMult: 1.8, desc: 'Giant root attack', effect: 'roots', color: '#228B22' },
+            'Giga Drain': { type: 'grass', dmgMult: 1.0, desc: 'Drains HP from enemy', effect: 'drain', color: '#32CD32' },
+
+            // Electric skills
+            'Thunder Shock': { type: 'electric', dmgMult: 0.8, desc: 'Electric jolt', effect: 'zap', color: '#FFD700' },
+            'Thunderbolt': { type: 'electric', dmgMult: 1.2, desc: 'Lightning bolt', effect: 'bolt', status: 'paralyze', color: '#FFD700' },
+            'Thunder': { type: 'electric', dmgMult: 1.5, desc: 'Massive thunder strike', effect: 'thunder', status: 'paralyze', color: '#FFFF00' },
+            'Discharge': { type: 'electric', dmgMult: 1.1, desc: 'Electric field burst', effect: 'discharge', color: '#FFD700' },
+            'Wild Charge': { type: 'electric', dmgMult: 1.4, desc: 'Charging shock attack', effect: 'charge', color: '#FFD700' },
+            'Volt Tackle': { type: 'electric', dmgMult: 1.6, desc: 'Full power tackle', effect: 'tackle', color: '#FFFF00' },
+            'Electro Ball': { type: 'electric', dmgMult: 1.0, desc: 'Speed-based orb', effect: 'projectile', color: '#FFD700' },
+            'Zap Cannon': { type: 'electric', dmgMult: 1.5, desc: 'Guaranteed paralysis', effect: 'cannon', status: 'paralyze', color: '#FFD700' },
+
+            // Psychic skills
+            'Confusion': { type: 'psychic', dmgMult: 0.8, desc: 'Confusing attack', effect: 'psychic', status: 'confuse', color: '#FF69B4' },
+            'Psybeam': { type: 'psychic', dmgMult: 1.0, desc: 'Psychic beam', effect: 'beam', color: '#FF69B4' },
+            'Psychic': { type: 'psychic', dmgMult: 1.3, desc: 'Powerful mind attack', effect: 'psychic', color: '#FF1493' },
+            'Psystrike': { type: 'psychic', dmgMult: 1.5, desc: 'Physical psychic hit', effect: 'strike', color: '#FF69B4' },
+            'Psyshock': { type: 'psychic', dmgMult: 1.4, desc: 'Psychic shockwave', effect: 'shock', color: '#FF1493' },
+            'Future Sight': { type: 'psychic', dmgMult: 1.6, desc: 'Delayed psychic blast', effect: 'delayed', color: '#9932CC' },
+            'Psycho Cut': { type: 'psychic', dmgMult: 1.1, desc: 'Psychic blade', effect: 'slash', color: '#FF69B4' },
+            'Zen Headbutt': { type: 'psychic', dmgMult: 1.2, desc: 'Focused headbutt', effect: 'melee', color: '#FF69B4' },
+
+            // Fighting skills
+            'Force Palm': { type: 'fighting', dmgMult: 0.9, desc: 'Palm strike', effect: 'melee', color: '#CD853F' },
+            'Close Combat': { type: 'fighting', dmgMult: 1.5, desc: 'Flurry of attacks', effect: 'flurry', color: '#8B4513' },
+            'Aura Sphere': { type: 'fighting', dmgMult: 1.3, desc: 'Never misses', effect: 'sphere', color: '#4169E1' },
+            'Focus Blast': { type: 'fighting', dmgMult: 1.6, desc: 'Concentrated power', effect: 'blast', color: '#FF4500' },
+            'Brick Break': { type: 'fighting', dmgMult: 1.1, desc: 'Shield-breaking chop', effect: 'melee', color: '#CD853F' },
+            'High Jump Kick': { type: 'fighting', dmgMult: 1.4, desc: 'Powerful kick', effect: 'kick', color: '#8B4513' },
+            'Drain Punch': { type: 'fighting', dmgMult: 1.0, desc: 'Draining punch', effect: 'melee', color: '#32CD32' },
+            'Counter': { type: 'fighting', dmgMult: 1.2, desc: 'Counter attack', effect: 'counter', color: '#CD853F' },
+
+            // Dragon skills
+            'Dragon Breath': { type: 'dragon', dmgMult: 0.9, desc: 'Dragon breath attack', effect: 'breath', color: '#7B68EE' },
+            'Dragon Claw': { type: 'dragon', dmgMult: 1.2, desc: 'Slashing claws', effect: 'claw', color: '#9400D3' },
+            'Dragon Pulse': { type: 'dragon', dmgMult: 1.3, desc: 'Dragon energy pulse', effect: 'pulse', color: '#7B68EE' },
+            'Draco Meteor': { type: 'dragon', dmgMult: 1.7, desc: 'Meteor shower', effect: 'meteor', color: '#FF4500' },
+            'Dragon Rush': { type: 'dragon', dmgMult: 1.4, desc: 'Charging dragon', effect: 'rush', color: '#9400D3' },
+            'Outrage': { type: 'dragon', dmgMult: 1.6, desc: 'Rampaging attack', effect: 'rampage', color: '#FF0000' },
+            'Dragon Ascent': { type: 'dragon', dmgMult: 1.8, desc: 'Ascending strike', effect: 'ascent', color: '#7CFC00' },
+            'Dragon Dance': { type: 'dragon', dmgMult: 0.8, desc: 'Boosts next attack', effect: 'buff', color: '#9400D3' },
+
+            // Ghost skills
+            'Lick': { type: 'ghost', dmgMult: 0.7, desc: 'Licking attack', effect: 'melee', status: 'paralyze', color: '#9370DB' },
+            'Shadow Ball': { type: 'ghost', dmgMult: 1.2, desc: 'Shadow orb', effect: 'projectile', color: '#4B0082' },
+            'Shadow Sneak': { type: 'ghost', dmgMult: 0.9, desc: 'Quick shadow', effect: 'sneak', color: '#2F4F4F' },
+            'Night Shade': { type: 'ghost', dmgMult: 1.0, desc: 'Dark illusion', effect: 'shade', color: '#191970' },
+            'Phantom Force': { type: 'ghost', dmgMult: 1.5, desc: 'Vanishing attack', effect: 'phantom', color: '#4B0082' },
+            'Dark Void': { type: 'ghost', dmgMult: 1.1, desc: 'Puts enemies to sleep', effect: 'void', status: 'sleep', color: '#000000' },
+            'Nightmare': { type: 'ghost', dmgMult: 1.3, desc: 'Dream attack', effect: 'nightmare', status: 'sleep', color: '#191970' },
+            'Hex': { type: 'ghost', dmgMult: 1.4, desc: 'Bonus vs status', effect: 'hex', color: '#9370DB' },
+
+            // Dark skills
+            'Dark Pulse': { type: 'dark', dmgMult: 1.2, desc: 'Dark aura wave', effect: 'pulse', color: '#2F4F4F' },
+            'Foul Play': { type: 'dark', dmgMult: 1.1, desc: 'Uses foe power', effect: 'foul', color: '#696969' },
+            'Crunch': { type: 'dark', dmgMult: 1.2, desc: 'Crushing bite', effect: 'bite', color: '#2F4F4F' },
+            'Sucker Punch': { type: 'dark', dmgMult: 1.0, desc: 'Priority strike', effect: 'punch', color: '#000000' },
+            'Night Slash': { type: 'dark', dmgMult: 1.1, desc: 'Dark slash', effect: 'slash', color: '#191970' },
+            'Knock Off': { type: 'dark', dmgMult: 1.0, desc: 'Item removal', effect: 'melee', color: '#2F4F4F' },
+
+            // Steel skills
+            'Metal Claw': { type: 'steel', dmgMult: 0.9, desc: 'Steel claw swipe', effect: 'claw', color: '#C0C0C0' },
+            'Bullet Punch': { type: 'steel', dmgMult: 1.0, desc: 'Quick steel punch', effect: 'punch', color: '#A9A9A9' },
+            'Iron Head': { type: 'steel', dmgMult: 1.2, desc: 'Steel headbutt', effect: 'melee', color: '#808080' },
+            'Meteor Mash': { type: 'steel', dmgMult: 1.4, desc: 'Meteoric punch', effect: 'meteor', color: '#C0C0C0' },
+            'Flash Cannon': { type: 'steel', dmgMult: 1.3, desc: 'Steel beam', effect: 'cannon', color: '#E8E8E8' },
+            'Heavy Slam': { type: 'steel', dmgMult: 1.3, desc: 'Heavy body slam', effect: 'slam', color: '#696969' },
+
+            // Ice skills
+            'Ice Beam': { type: 'ice', dmgMult: 1.2, desc: 'Freezing beam', effect: 'beam', status: 'freeze', color: '#00BFFF' },
+            'Blizzard': { type: 'ice', dmgMult: 1.5, desc: 'Snowstorm attack', effect: 'storm', status: 'freeze', color: '#E0FFFF' },
+            'Ice Shard': { type: 'ice', dmgMult: 0.9, desc: 'Quick ice', effect: 'projectile', color: '#87CEEB' },
+            'Powder Snow': { type: 'ice', dmgMult: 0.7, desc: 'Gentle snow', effect: 'snow', color: '#FFFFFF' },
+            'Avalanche': { type: 'ice', dmgMult: 1.4, desc: 'Ice avalanche', effect: 'avalanche', color: '#ADD8E6' },
+            'Freeze Dry': { type: 'ice', dmgMult: 1.1, desc: 'Instant freeze', effect: 'freeze', status: 'freeze', color: '#00BFFF' },
+
+            // Ground skills
+            'Mud Shot': { type: 'ground', dmgMult: 0.9, desc: 'Mud projectile', effect: 'projectile', status: 'slow', color: '#8B7355' },
+            'Earthquake': { type: 'ground', dmgMult: 1.5, desc: 'Ground shaking AOE', effect: 'quake', status: 'stun', color: '#8B4513' },
+            'Earth Power': { type: 'ground', dmgMult: 1.3, desc: 'Ground eruption', effect: 'eruption', color: '#CD853F' },
+            'Dig': { type: 'ground', dmgMult: 1.1, desc: 'Underground attack', effect: 'dig', color: '#8B7355' },
+            'Sand Attack': { type: 'ground', dmgMult: 0.6, desc: 'Blinds enemies', effect: 'sand', status: 'blind', color: '#F4A460' },
+            'Precipice Blades': { type: 'ground', dmgMult: 1.8, desc: 'Primal blade eruption', effect: 'blades', color: '#FF4500' },
+
+            // Rock skills
+            'Rock Throw': { type: 'rock', dmgMult: 0.8, desc: 'Thrown rock', effect: 'projectile', color: '#A0522D' },
+            'Rock Slide': { type: 'rock', dmgMult: 1.1, desc: 'Falling rocks', effect: 'slide', color: '#8B7355' },
+            'Stone Edge': { type: 'rock', dmgMult: 1.4, desc: 'Sharp stone strike', effect: 'edge', color: '#696969' },
+            'Rock Blast': { type: 'rock', dmgMult: 1.2, desc: 'Rock barrage', effect: 'multi', color: '#A0522D' },
+            'Ancient Power': { type: 'rock', dmgMult: 1.0, desc: 'Ancient energy', effect: 'ancient', color: '#9370DB' },
+
+            // Fairy skills
+            'Moonblast': { type: 'fairy', dmgMult: 1.3, desc: 'Moon energy blast', effect: 'blast', color: '#FFB6C1' },
+            'Dazzling Gleam': { type: 'fairy', dmgMult: 1.2, desc: 'Blinding light', effect: 'gleam', color: '#FFD700' },
+            'Play Rough': { type: 'fairy', dmgMult: 1.1, desc: 'Rough playing', effect: 'melee', color: '#FF69B4' },
+            'Disarming Voice': { type: 'fairy', dmgMult: 0.9, desc: 'Charming voice', effect: 'voice', color: '#FFB6C1' },
+            'Draining Kiss': { type: 'fairy', dmgMult: 1.0, desc: 'HP draining kiss', effect: 'drain', color: '#FF69B4' },
+
+            // Poison skills
+            'Sludge Bomb': { type: 'poison', dmgMult: 1.2, desc: 'Toxic sludge', effect: 'bomb', status: 'poison', color: '#9932CC' },
+            'Poison Jab': { type: 'poison', dmgMult: 1.1, desc: 'Poisonous stab', effect: 'melee', status: 'poison', color: '#8B008B' },
+            'Toxic': { type: 'poison', dmgMult: 0.5, desc: 'Badly poisons', effect: 'toxic', status: 'poison', color: '#9400D3' },
+            'Cross Poison': { type: 'poison', dmgMult: 1.0, desc: 'Cross slash', effect: 'slash', status: 'poison', color: '#9932CC' },
+            'Gunk Shot': { type: 'poison', dmgMult: 1.4, desc: 'Filthy projectile', effect: 'projectile', status: 'poison', color: '#556B2F' },
+
+            // Bug skills
+            'Fury Cutter': { type: 'bug', dmgMult: 0.8, desc: 'Slashing fury', effect: 'slash', color: '#9ACD32' },
+            'X-Scissor': { type: 'bug', dmgMult: 1.2, desc: 'Cross cut', effect: 'scissor', color: '#6B8E23' },
+            'Bug Buzz': { type: 'bug', dmgMult: 1.1, desc: 'Vibrating sound', effect: 'buzz', color: '#ADFF2F' },
+            'U-turn': { type: 'bug', dmgMult: 1.0, desc: 'Hit and run', effect: 'uturn', color: '#9ACD32' },
+            'Signal Beam': { type: 'bug', dmgMult: 1.0, desc: 'Light beam', effect: 'beam', color: '#7CFC00' },
+
+            // Flying skills
+            'Aerial Ace': { type: 'flying', dmgMult: 1.0, desc: 'Swift flying slash', effect: 'ace', color: '#87CEEB' },
+            'Air Slash': { type: 'flying', dmgMult: 1.1, desc: 'Air blade attack', effect: 'slash', color: '#ADD8E6' },
+            'Hurricane': { type: 'flying', dmgMult: 1.4, desc: 'Powerful gust', effect: 'hurricane', color: '#4682B4' },
+            'Brave Bird': { type: 'flying', dmgMult: 1.5, desc: 'Reckless dive', effect: 'dive', color: '#FF4500' },
+            'Aerilate': { type: 'flying', dmgMult: 1.3, desc: 'Flying boost', effect: 'boost', color: '#87CEEB' },
+
+            // Normal skills
+            'Tackle': { type: 'normal', dmgMult: 0.7, desc: 'Basic tackle', effect: 'tackle', color: '#A9A9A9' },
+            'Pound': { type: 'normal', dmgMult: 0.7, desc: 'Pounding attack', effect: 'melee', color: '#A9A9A9' },
+            'Take Down': { type: 'normal', dmgMult: 1.0, desc: 'Reckless charge', effect: 'charge', color: '#D2691E' },
+            'Body Slam': { type: 'normal', dmgMult: 1.1, desc: 'Full body attack', effect: 'slam', color: '#A9A9A9' },
+            'Hyper Beam': { type: 'normal', dmgMult: 1.8, desc: 'Devastating beam', effect: 'hyperbeam', color: '#FFD700' },
+            'Splash': { type: 'normal', dmgMult: 0.1, desc: 'Nothing happens...', effect: 'splash', color: '#87CEEB' },
+            'Dragon Rage': { type: 'normal', dmgMult: 1.0, desc: 'Fixed damage rage', effect: 'rage', color: '#FF4500' },
+
+            // Special
+            'Will-O-Wisp': { type: 'fire', dmgMult: 0.6, desc: 'Ghost flame, burns', effect: 'wisp', status: 'burn', color: '#00BFFF' }
+        };
+
         // Game state
         let gameState = {
             coins: 1200,
@@ -1667,28 +1832,28 @@
             updateEnemyPreview();
         }
 
-        // Tower Pokemon definitions
+        // Tower Pokemon definitions with 4 skills each
         const towerPokemon = [
-            // ... (All pokemon definitions go here, but with modifications)
-            // Example modification for Gengar and Lucario:
             {
                 id: 13, dexId: 448, name: 'Lucario', types: ['fighting', 'steel'], cost: 280,
-                damage: 50, range: 70, attackSpeed: 2.5, // Low range, high speed
+                damage: 50, range: 70, attackSpeed: 2.5,
                 description: 'Aura Pokemon - Unleashes a flurry of punches at close range.',
+                skills: ['Aura Sphere', 'Close Combat', 'Bullet Punch', 'Focus Blast'],
                 evolutionLine: [
                     {dexId: 447, name: 'Riolu', level: 1, attack: 'Force Palm'},
-                    {dexId: 448, name: 'Lucario', level: 20, attack: 'Close Combat'}, // Changed attack name
+                    {dexId: 448, name: 'Lucario', level: 20, attack: 'Close Combat'},
                     {dexId: 448, name: 'Mega Lucario', level: 45, attack: 'Close Combat', mega: true}
                 ]
             },
             {
                 id: 14, dexId: 94, name: 'Gengar', types: ['ghost', 'poison'], cost: 250, hasDetect: true,
-                damage: 65, range: 140, attackSpeed: 0.6, // Higher damage, slower speed
+                damage: 65, range: 140, attackSpeed: 0.6,
                 description: 'Shadow Pokemon - 50% chance to put enemies to sleep. Can detect invisible enemies.',
+                skills: ['Shadow Ball', 'Dark Void', 'Sludge Bomb', 'Hex'],
                 evolutionLine: [
                     {dexId: 92, name: 'Gastly', level: 1, attack: 'Lick'},
                     {dexId: 93, name: 'Haunter', level: 25, attack: 'Shadow Ball'},
-                    {dexId: 94, name: 'Gengar', level: 40, attack: 'Dark Void'}, // This name maps to the sleep attack
+                    {dexId: 94, name: 'Gengar', level: 40, attack: 'Dark Void'},
                     {dexId: 94, name: 'Mega Gengar', level: 50, attack: 'Nightmare', mega: true}
                 ]
             },
@@ -1696,17 +1861,18 @@
                 id: 9, dexId: 150, name: 'Mewtwo', types: ['psychic'], cost: 600, hasDetect: true,
                 damage: 75, range: 180, attackSpeed: 0.8,
                 description: 'Legendary Psychic - Devastating power. Can detect invisible enemies.',
+                skills: ['Psystrike', 'Psychic', 'Focus Blast', 'Aura Sphere'],
                 evolutionLine: [
                     {dexId: 150, name: 'Mewtwo', level: 1, attack: 'Psystrike'},
                     {dexId: 150, name: 'Mega Mewtwo X', level: 50, attack: 'Focus Blast', mega: true, types: ['psychic', 'fighting']},
                     {dexId: 150, name: 'Mega Mewtwo Y', level: 50, attack: 'Psyshock', mega: true}
                 ]
             },
-            // ... (Rest of the original towerPokemon array with hasDetect and Fighting changes)
             {
                 id: 1, dexId: 4, name: 'Charmander', types: ['fire'], cost: 180,
                 damage: 30, range: 100, attackSpeed: 0.7,
                 description: 'Fire starter - Strong against Grass, Bug, Ice, Steel',
+                skills: ['Flamethrower', 'Fire Blast', 'Dragon Claw', 'Heat Wave'],
                 evolutionLine: [
                     {dexId: 4, name: 'Charmander', level: 1, attack: 'Ember'},
                     {dexId: 5, name: 'Charmeleon', level: 16, attack: 'Fire Fang'},
@@ -1719,6 +1885,7 @@
                 id: 2, dexId: 7, name: 'Squirtle', types: ['water'], cost: 160,
                 damage: 28, range: 110, attackSpeed: 0.75,
                 description: 'Water starter - Strong against Fire, Ground, Rock',
+                skills: ['Hydro Pump', 'Water Pulse', 'Aqua Jet', 'Surf'],
                 evolutionLine: [
                     {dexId: 7, name: 'Squirtle', level: 1, attack: 'Bubble'},
                     {dexId: 8, name: 'Wartortle', level: 16, attack: 'Water Pulse'},
@@ -1730,6 +1897,7 @@
                 id: 3, dexId: 1, name: 'Bulbasaur', types: ['grass', 'poison'], cost: 150,
                 damage: 25, range: 120, attackSpeed: 0.8,
                 description: 'Grass starter - Strong against Water, Ground, Rock',
+                skills: ['Solar Beam', 'Vine Whip', 'Sludge Bomb', 'Energy Ball'],
                 evolutionLine: [
                     {dexId: 1, name: 'Bulbasaur', level: 1, attack: 'Vine Whip'},
                     {dexId: 2, name: 'Ivysaur', level: 16, attack: 'Razor Leaf'},
@@ -1741,6 +1909,7 @@
                 id: 4, dexId: 255, name: 'Torchic', types: ['fire'], cost: 170,
                 damage: 32, range: 95, attackSpeed: 0.9,
                 description: 'Fire/Fighting evolution with high speed',
+                skills: ['Blaze Kick', 'Close Combat', 'Flamethrower', 'High Jump Kick'],
                 evolutionLine: [
                     {dexId: 255, name: 'Torchic', level: 1, attack: 'Ember'},
                     {dexId: 256, name: 'Combusken', level: 16, attack: 'Close Combat', types: ['fire', 'fighting']},
@@ -1752,6 +1921,7 @@
                 id: 5, dexId: 258, name: 'Mudkip', types: ['water'], cost: 165,
                 damage: 30, range: 105, attackSpeed: 0.75,
                 description: 'Water/Ground evolution with high HP',
+                skills: ['Earthquake', 'Muddy Water', 'Surf', 'Earth Power'],
                 evolutionLine: [
                     {dexId: 258, name: 'Mudkip', level: 1, attack: 'Water Gun'},
                     {dexId: 259, name: 'Marshtomp', level: 16, attack: 'Mud Shot', types: ['water', 'ground']},
@@ -1763,6 +1933,7 @@
                 id: 6, dexId: 252, name: 'Treecko', types: ['grass'], cost: 155,
                 damage: 27, range: 115, attackSpeed: 0.95,
                 description: 'Grass/Dragon mega evolution',
+                skills: ['Leaf Storm', 'Dragon Pulse', 'Leaf Blade', 'Energy Ball'],
                 evolutionLine: [
                     {dexId: 252, name: 'Treecko', level: 1, attack: 'Pound'},
                     {dexId: 253, name: 'Grovyle', level: 16, attack: 'Leaf Blade'},
@@ -1774,6 +1945,7 @@
                 id: 7, dexId: 25, name: 'Pikachu', types: ['electric'], cost: 200,
                 damage: 35, range: 130, attackSpeed: 1.0,
                 description: 'Electric mouse - Chain lightning attacks',
+                skills: ['Thunderbolt', 'Thunder', 'Volt Tackle', 'Electro Ball'],
                 evolutionLine: [
                     {dexId: 172, name: 'Pichu', level: 1, attack: 'Thunder Shock'},
                     {dexId: 25, name: 'Pikachu', level: 10, attack: 'Thunderbolt'},
@@ -1784,22 +1956,24 @@
                 id: 8, dexId: 133, name: 'Eevee', types: ['normal'], cost: 180,
                 damage: 25, range: 110, attackSpeed: 0.8,
                 description: 'Evolution Pokemon - Choose your evolution path',
+                skills: ['Tackle', 'Body Slam', 'Take Down', 'Hyper Beam'],
                 evolutionLine: [
                     {dexId: 133, name: 'Eevee', level: 1, attack: 'Tackle'},
-                    {dexId: 134, name: 'Vaporeon', level: 20, attack: 'Water Pulse', types: ['water']},
-                    {dexId: 135, name: 'Jolteon', level: 20, attack: 'Thunderbolt', types: ['electric']},
-                    {dexId: 136, name: 'Flareon', level: 20, attack: 'Fire Blast', types: ['fire']},
-                    {dexId: 196, name: 'Espeon', level: 20, attack: 'Psychic', types: ['psychic'], hasDetect: true},
-                    {dexId: 197, name: 'Umbreon', level: 20, attack: 'Dark Pulse', types: ['dark']},
-                    {dexId: 700, name: 'Sylveon', level: 20, attack: 'Moonblast', types: ['fairy'], hasDetect: true},
-                    {dexId: 471, name: 'Glaceon', level: 20, attack: 'Ice Beam', types: ['ice']},
-                    {dexId: 470, name: 'Leafeon', level: 20, attack: 'Leaf Blade', types: ['grass']}
+                    {dexId: 134, name: 'Vaporeon', level: 20, attack: 'Water Pulse', types: ['water'], skills: ['Hydro Pump', 'Surf', 'Scald', 'Aqua Jet']},
+                    {dexId: 135, name: 'Jolteon', level: 20, attack: 'Thunderbolt', types: ['electric'], skills: ['Thunder', 'Thunderbolt', 'Discharge', 'Volt Tackle']},
+                    {dexId: 136, name: 'Flareon', level: 20, attack: 'Fire Blast', types: ['fire'], skills: ['Fire Blast', 'Flamethrower', 'Overheat', 'Heat Wave']},
+                    {dexId: 196, name: 'Espeon', level: 20, attack: 'Psychic', types: ['psychic'], hasDetect: true, skills: ['Psychic', 'Psybeam', 'Future Sight', 'Psyshock']},
+                    {dexId: 197, name: 'Umbreon', level: 20, attack: 'Dark Pulse', types: ['dark'], skills: ['Dark Pulse', 'Foul Play', 'Crunch', 'Sucker Punch']},
+                    {dexId: 700, name: 'Sylveon', level: 20, attack: 'Moonblast', types: ['fairy'], hasDetect: true, skills: ['Moonblast', 'Dazzling Gleam', 'Draining Kiss', 'Play Rough']},
+                    {dexId: 471, name: 'Glaceon', level: 20, attack: 'Ice Beam', types: ['ice'], skills: ['Ice Beam', 'Blizzard', 'Ice Shard', 'Freeze Dry']},
+                    {dexId: 470, name: 'Leafeon', level: 20, attack: 'Leaf Blade', types: ['grass'], skills: ['Leaf Blade', 'Solar Beam', 'Energy Ball', 'Giga Drain']}
                 ]
             },
             {
                 id: 10, dexId: 384, name: 'Rayquaza', types: ['dragon', 'flying'], cost: 650,
                 damage: 80, range: 170, attackSpeed: 0.9,
                 description: 'Sky High Pokemon - Dragon Ascent',
+                skills: ['Dragon Ascent', 'Outrage', 'Draco Meteor', 'Hurricane'],
                 evolutionLine: [
                     {dexId: 384, name: 'Rayquaza', level: 1, attack: 'Dragon Ascent'},
                     {dexId: 384, name: 'Mega Rayquaza', level: 50, attack: 'Dragon Ascent', mega: true}
@@ -1809,6 +1983,7 @@
                 id: 11, dexId: 383, name: 'Groudon', types: ['ground'], cost: 700,
                 damage: 85, range: 140, attackSpeed: 0.6,
                 description: 'Continent Pokemon - Precipice Blades',
+                skills: ['Precipice Blades', 'Earthquake', 'Earth Power', 'Fire Blast'],
                 evolutionLine: [
                     {dexId: 383, name: 'Groudon', level: 1, attack: 'Earthquake'},
                     {dexId: 383, name: 'Primal Groudon', level: 50, attack: 'Precipice Blades', mega: true, types: ['ground', 'fire']}
@@ -1818,6 +1993,7 @@
                 id: 12, dexId: 382, name: 'Kyogre', types: ['water'], cost: 700,
                 damage: 85, range: 160, attackSpeed: 0.7,
                 description: 'Sea Basin Pokemon - Origin Pulse',
+                skills: ['Origin Pulse', 'Water Spout', 'Hydro Pump', 'Blizzard'],
                 evolutionLine: [
                     {dexId: 382, name: 'Kyogre', level: 1, attack: 'Water Spout'},
                     {dexId: 382, name: 'Primal Kyogre', level: 50, attack: 'Origin Pulse', mega: true}
@@ -1827,6 +2003,7 @@
                 id: 15, dexId: 445, name: 'Garchomp', types: ['dragon', 'ground'], cost: 350,
                 damage: 60, range: 100, attackSpeed: 0.8,
                 description: 'Mach Pokemon - AOE Earthquake',
+                skills: ['Earthquake', 'Dragon Rush', 'Dragon Claw', 'Outrage'],
                 evolutionLine: [
                     {dexId: 443, name: 'Gible', level: 1, attack: 'Sand Attack'},
                     {dexId: 444, name: 'Gabite', level: 24, attack: 'Dragon Claw'},
@@ -1838,6 +2015,7 @@
                 id: 16, dexId: 376, name: 'Metagross', types: ['steel', 'psychic'], cost: 400, hasDetect: true,
                 damage: 65, range: 110, attackSpeed: 0.6,
                 description: 'Iron Leg Pokemon - Meteor Mash. Can detect invisible enemies.',
+                skills: ['Meteor Mash', 'Psychic', 'Bullet Punch', 'Flash Cannon'],
                 evolutionLine: [
                     {dexId: 374, name: 'Beldum', level: 1, attack: 'Take Down'},
                     {dexId: 375, name: 'Metang', level: 20, attack: 'Metal Claw'},
@@ -1849,6 +2027,7 @@
                 id: 17, dexId: 373, name: 'Salamence', types: ['dragon', 'flying'], cost: 380,
                 damage: 58, range: 135, attackSpeed: 0.85,
                 description: 'Dragon Pokemon - Draco Meteor',
+                skills: ['Draco Meteor', 'Dragon Claw', 'Hurricane', 'Outrage'],
                 evolutionLine: [
                     {dexId: 371, name: 'Bagon', level: 1, attack: 'Dragon Breath'},
                     {dexId: 372, name: 'Shelgon', level: 30, attack: 'Dragon Claw'},
@@ -1860,6 +2039,7 @@
                 id: 18, dexId: 282, name: 'Gardevoir', types: ['psychic', 'fairy'], cost: 270, hasDetect: true,
                 damage: 42, range: 160, attackSpeed: 0.85,
                 description: 'Embrace Pokemon - Charm and confusion. Can detect invisible enemies.',
+                skills: ['Moonblast', 'Psychic', 'Dazzling Gleam', 'Future Sight'],
                 evolutionLine: [
                     {dexId: 280, name: 'Ralts', level: 1, attack: 'Confusion'},
                     {dexId: 281, name: 'Kirlia', level: 20, attack: 'Psychic'},
@@ -1871,6 +2051,7 @@
                 id: 19, dexId: 65, name: 'Alakazam', types: ['psychic'], cost: 260, hasDetect: true,
                 damage: 48, range: 150, attackSpeed: 0.7,
                 description: 'Psi Pokemon - High special attack. Can detect invisible enemies.',
+                skills: ['Psychic', 'Psybeam', 'Future Sight', 'Psyshock'],
                 evolutionLine: [
                     {dexId: 63, name: 'Abra', level: 1, attack: 'Confusion'},
                     {dexId: 64, name: 'Kadabra', level: 16, attack: 'Psybeam'},
@@ -1882,6 +2063,7 @@
                 id: 20, dexId: 248, name: 'Tyranitar', types: ['rock', 'dark'], cost: 420,
                 damage: 70, range: 100, attackSpeed: 0.5,
                 description: 'Armor Pokemon - Stone Edge AOE',
+                skills: ['Stone Edge', 'Crunch', 'Earthquake', 'Hyper Beam'],
                 evolutionLine: [
                     {dexId: 246, name: 'Larvitar', level: 1, attack: 'Rock Throw'},
                     {dexId: 247, name: 'Pupitar', level: 30, attack: 'Rock Slide'},
@@ -1893,6 +2075,7 @@
                 id: 21, dexId: 130, name: 'Gyarados', types: ['water', 'flying'], cost: 320,
                 damage: 58, range: 115, attackSpeed: 0.75,
                 description: 'Atrocious Pokemon - Dragon Rage',
+                skills: ['Hydro Pump', 'Hurricane', 'Crunch', 'Hyper Beam'],
                 evolutionLine: [
                     {dexId: 129, name: 'Magikarp', level: 1, attack: 'Splash'},
                     {dexId: 130, name: 'Gyarados', level: 20, attack: 'Dragon Rage'},
@@ -1903,6 +2086,7 @@
                 id: 22, dexId: 212, name: 'Scizor', types: ['bug', 'steel'], cost: 290,
                 damage: 52, range: 105, attackSpeed: 1.2,
                 description: 'Pincer Pokemon - Bullet Punch priority',
+                skills: ['Bullet Punch', 'X-Scissor', 'Iron Head', 'U-turn'],
                 evolutionLine: [
                     {dexId: 123, name: 'Scyther', level: 1, attack: 'Fury Cutter', types: ['bug', 'flying']},
                     {dexId: 212, name: 'Scizor', level: 25, attack: 'Bullet Punch'},
@@ -1913,6 +2097,7 @@
                 id: 23, dexId: 229, name: 'Houndoom', types: ['dark', 'fire'], cost: 240,
                 damage: 46, range: 125, attackSpeed: 0.9,
                 description: 'Dark Pokemon - Nasty Plot boost',
+                skills: ['Inferno', 'Dark Pulse', 'Flamethrower', 'Crunch'],
                 evolutionLine: [
                     {dexId: 228, name: 'Houndour', level: 1, attack: 'Ember'},
                     {dexId: 229, name: 'Houndoom', level: 24, attack: 'Foul Play'},
@@ -1923,6 +2108,7 @@
                 id: 24, dexId: 310, name: 'Manectric', types: ['electric'], cost: 230,
                 damage: 42, range: 135, attackSpeed: 1.0,
                 description: 'Discharge Pokemon - Chain lightning',
+                skills: ['Discharge', 'Thunderbolt', 'Wild Charge', 'Thunder'],
                 evolutionLine: [
                     {dexId: 309, name: 'Electrike', level: 1, attack: 'Thunder Shock'},
                     {dexId: 310, name: 'Manectric', level: 26, attack: 'Discharge'},
@@ -1933,6 +2119,7 @@
                 id: 25, dexId: 354, name: 'Banette', types: ['ghost'], cost: 210, hasDetect: true,
                 damage: 44, range: 120, attackSpeed: 0.8,
                 description: 'Marionette Pokemon - Curse damage. Can detect invisible enemies.',
+                skills: ['Shadow Ball', 'Phantom Force', 'Hex', 'Night Shade'],
                 evolutionLine: [
                     {dexId: 353, name: 'Shuppet', level: 1, attack: 'Night Shade'},
                     {dexId: 354, name: 'Banette', level: 37, attack: 'Shadow Ball'},
@@ -1943,6 +2130,7 @@
                 id: 34, dexId: 475, name: 'Gallade', types: ['psychic', 'fighting'], cost: 270, hasDetect: true,
                 damage: 50, range: 75, attackSpeed: 2.2,
                 description: 'Blade Pokemon - Close Combat. Can detect invisible enemies.',
+                skills: ['Close Combat', 'Psycho Cut', 'Drain Punch', 'Zen Headbutt'],
                 evolutionLine: [
                     {dexId: 280, name: 'Ralts', level: 1, attack: 'Confusion'},
                     {dexId: 281, name: 'Kirlia', level: 20, attack: 'Psycho Cut'},
@@ -1954,6 +2142,7 @@
                 id: 36, dexId: 302, name: 'Sableye', types: ['dark', 'ghost'], cost: 190, hasDetect: true,
                 damage: 35, range: 120, attackSpeed: 0.8,
                 description: 'Darkness Pokemon - Will-O-Wisp. Can detect invisible enemies.',
+                skills: ['Shadow Ball', 'Dark Pulse', 'Will-O-Wisp', 'Hex'],
                 evolutionLine: [
                     {dexId: 302, name: 'Sableye', level: 1, attack: 'Shadow Sneak'},
                     {dexId: 302, name: 'Mega Sableye', level: 40, attack: 'Dark Pulse', mega: true}
@@ -2653,10 +2842,20 @@
                 if (!this.hitEnemies.has(enemy) && enemy.hp > 0) {
                     if (damageMultiplier === 1) this.hitEnemies.add(enemy);
 
-                    const damage = this.tower.pokemon.damage * this.tower.damageBonus * (1 + this.tower.level * 0.1) * damageMultiplier;
+                    const skillMult = this.tower.skillMultiplier || 1.0;
+                    const damage = this.tower.pokemon.damage * this.tower.damageBonus * (1 + this.tower.level * 0.1) * damageMultiplier * skillMult;
                     const effectiveness = this.tower.calculateTypeEffectiveness(enemy.types);
                     enemy.takeDamage(damage, effectiveness, this.tower);
-                    
+
+                    // Apply skill status effect
+                    if (this.tower.skillStatus && damageMultiplier === 1) {
+                        const statusChance = 0.25; // 25% chance to apply status
+                        if (Math.random() < statusChance) {
+                            const statusDuration = this.tower.skillStatus === 'freeze' ? 90 : 120;
+                            enemy.applyStatus(this.tower.skillStatus, statusDuration);
+                        }
+                    }
+
                     if (damageMultiplier === 1) {
                         if (this.attackName.includes('Thunder')) soundManager.playSound('thunder');
                         else if (this.attackName.includes('Psychic')) soundManager.playSound('psychic');
@@ -2715,6 +2914,10 @@
                 this.isAttacking = false;
                 this.attackFrame = 0;
                 this.totalDamageDealt = 0;
+                // Initialize selected skill
+                const skills = this.pokemon.skills || ['Tackle', 'Tackle', 'Tackle', 'Tackle'];
+                this.selectedSkill = skills[0];
+                this.skillMultiplier = 1.0;
             }
 
             updateSprite() {
@@ -3365,14 +3568,39 @@
             techTree.classList.add('active');
             document.getElementById('pokemonList').style.display = 'none';
             
+            // Get available skills for current evolution
+            const currentEvo = tower.pokemon.evolutionLine[tower.evolutionStage];
+            const availableSkills = currentEvo && currentEvo.skills ? currentEvo.skills : (tower.pokemon.skills || ['Tackle', 'Tackle', 'Tackle', 'Tackle']);
+            if (!tower.selectedSkill) tower.selectedSkill = availableSkills[0];
+            const skillData = skillDatabase[tower.selectedSkill] || { dmgMult: 1.0, desc: 'Basic attack' };
+
             // Update tower stats
             towerStats.innerHTML = `
                 <div class="tower-stat">Name: <span class="tower-stat-value">${tower.currentName}</span></div>
                 <div class="tower-stat">Level: <span class="tower-stat-value">${tower.level}</span></div>
                 <div class="tower-stat">Kills: <span class="tower-stat-value">${tower.kills}</span></div>
                 <div class="tower-stat">Total Damage: <span class="tower-stat-value">${Math.floor(tower.totalDamageDealt)}</span></div>
-                <div class="tower-stat">Current DPS: <span class="tower-stat-value">${Math.floor(tower.pokemon.damage * tower.damageBonus * tower.pokemon.attackSpeed * tower.speedBonus)}</span></div>
-                <div class="tower-stat">Attack: <span class="tower-stat-value">${tower.currentAttack}</span></div>
+                <div class="tower-stat">Current DPS: <span class="tower-stat-value">${Math.floor(tower.pokemon.damage * tower.damageBonus * skillData.dmgMult * tower.pokemon.attackSpeed * tower.speedBonus)}</span></div>
+                <div class="tower-stat">Active Skill: <span class="tower-stat-value" style="color: ${skillData.color || '#FFD700'}">${tower.selectedSkill}</span></div>
+                <div style="margin-top: 10px; font-size: 11px; color: #aaa;">
+                    <b>Skills:</b> Click to change active skill
+                </div>
+                <div class="skill-selector" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px;">
+                    ${availableSkills.map((skill, idx) => {
+                        const sData = skillDatabase[skill] || { dmgMult: 1.0, desc: 'Attack', color: '#999' };
+                        const isActive = tower.selectedSkill === skill;
+                        return `<button onclick="selectTowerSkill('${skill}')"
+                            style="flex: 1; min-width: 45%; padding: 8px 5px; font-size: 10px;
+                            background: ${isActive ? sData.color : '#333'};
+                            color: ${isActive ? '#000' : '#fff'};
+                            border: 2px solid ${sData.color}; border-radius: 5px; cursor: pointer;
+                            opacity: ${isActive ? 1 : 0.8};">
+                            <div style="font-weight: bold;">${skill}</div>
+                            <div style="font-size: 9px; opacity: 0.8;">${sData.desc}</div>
+                            <div style="font-size: 9px;">DMG: x${sData.dmgMult.toFixed(1)}</div>
+                        </button>`;
+                    }).join('')}
+                </div>
             `;
             
             // Update upgrade counts
@@ -3667,6 +3895,30 @@
             document.getElementById('pokemonList').style.display = 'block';
             document.getElementById('pokemonFilter').value = 'all';
             initPokemonList();
+        }
+
+        function selectTowerSkill(skillName) {
+            if (!gameState.selectedTower) return;
+
+            const tower = gameState.selectedTower;
+            tower.selectedSkill = skillName;
+
+            // Get skill data and apply multiplier
+            const skillData = skillDatabase[skillName];
+            if (skillData) {
+                tower.skillMultiplier = skillData.dmgMult || 1.0;
+                tower.skillEffect = skillData.effect || 'projectile';
+                tower.skillColor = skillData.color || '#FFD700';
+                tower.skillStatus = skillData.status || null;
+            } else {
+                tower.skillMultiplier = 1.0;
+                tower.skillEffect = 'projectile';
+                tower.skillColor = '#FFD700';
+                tower.skillStatus = null;
+            }
+
+            // Refresh the tech tree UI to show updated selection
+            showTechTree(tower);
         }
 
         // Game control functions
@@ -4061,6 +4313,8 @@
                         ctx.save();
                         const pType = projectile.tower.pokemon.types ? projectile.tower.pokemon.types[0] : 'normal';
                         const pColors = typeColors[pType] || typeColors.normal;
+                        // Use skill color if available, otherwise use type color
+                        const skillColor = projectile.tower.skillColor || pColors.primary;
                         const pSize = projectile.size || 6;
 
                         // Outer glow
@@ -4070,15 +4324,15 @@
                         ctx.arc(projectile.x, projectile.y, pSize * 2, 0, Math.PI * 2);
                         ctx.fill();
 
-                        // Main projectile
+                        // Main projectile - uses skill color
                         ctx.globalAlpha = 1;
-                        ctx.fillStyle = pColors.primary;
+                        ctx.fillStyle = skillColor;
                         ctx.beginPath();
                         ctx.arc(projectile.x, projectile.y, pSize, 0, Math.PI * 2);
                         ctx.fill();
 
                         // Inner highlight
-                        ctx.fillStyle = pColors.secondary;
+                        ctx.fillStyle = pColors.secondary || '#FFFFFF';
                         ctx.beginPath();
                         ctx.arc(projectile.x, projectile.y, pSize * 0.5, 0, Math.PI * 2);
                         ctx.fill();
