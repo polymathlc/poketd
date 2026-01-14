@@ -1,0 +1,4077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon Tower Defense - Expert Mode</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            color: white;
+        }
+
+        #expertDifficultyWarning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            text-align: center;
+            flex-direction: column;
+            backdrop-filter: blur(5px);
+        }
+
+        .warning-content {
+            border: 3px solid #FFA500;
+            padding: 40px;
+            background: linear-gradient(135deg, #3a2a0b, #1a1a0c);
+            border-radius: 20px;
+            max-width: 700px;
+        }
+        
+        .warning-content h1 {
+            color: #FFA500;
+            font-size: 48px;
+            text-shadow: 0 0 20px orange;
+            margin-bottom: 20px;
+        }
+
+        .warning-content p {
+            color: #ccc;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        .warning-content ul {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .warning-content li {
+            background: rgba(255,165,0,0.1);
+            margin: 5px 0;
+            padding: 8px;
+            border-left: 3px solid #FFC107;
+        }
+
+        #proceedBtn {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #1a1a2e;
+            font-size: 20px;
+            padding: 15px 40px;
+            border-radius: 30px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s;
+        }
+
+        #proceedBtn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px #FFA500;
+        }
+
+
+        #gameContainer {
+            display: flex;
+            height: 100vh;
+        }
+
+        #gameCanvas {
+            border: 3px solid #FFD700;
+            background: linear-gradient(to bottom, #4a7c59, #2d5016);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            image-rendering: crisp-edges;
+            cursor: crosshair;
+        }
+
+        #sidebar {
+            width: 450px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.95), rgba(20,20,40,0.95));
+            display: flex;
+            flex-direction: column;
+            border-left: 3px solid #FFD700;
+        }
+
+        #topPanel {
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 2px solid #444;
+        }
+
+        #stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+
+        .stat-label {
+            color: #aaa;
+            font-size: 11px;
+        }
+
+        .stat-value {
+            color: #FFD700;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+        }
+
+        #gameControls {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+            justify-content: center;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #5a5a8a, #4a4a7a);
+            color: white;
+            border: 1px solid #666;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .control-btn:hover {
+            background: linear-gradient(135deg, #6a6a9a, #5a5a8a);
+            transform: scale(1.05);
+        }
+
+        .control-btn.active {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #1a1a2e;
+        }
+
+        #waveControl {
+            background: linear-gradient(135deg, #ff6b6b, #c44569);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        #waveInfo {
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #FFD700;
+        }
+
+        #waveProgress {
+            width: 100%;
+            height: 6px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 3px;
+            margin-bottom: 8px;
+            overflow: hidden;
+        }
+
+        #waveProgressBar {
+            height: 100%;
+            background: linear-gradient(90deg, #FFD700, #FFA500);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .wave-btn {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #1a1a2e;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 10px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .wave-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
+        }
+
+        .wave-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #enemyPreview {
+            background: rgba(139, 69, 19, 0.3);
+            border: 2px solid #8B4513;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .preview-title {
+            color: #FFD700;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .enemy-preview-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .enemy-preview-item {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #666;
+            border-radius: 8px;
+            padding: 5px;
+            text-align: center;
+            min-width: 60px;
+            position: relative;
+        }
+
+        .enemy-preview-item.boss {
+            border-color: #FF0000;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+        }
+
+        .boss-indicator {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #FF0000;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .enemy-preview-sprite {
+            width: 40px;
+            height: 40px;
+            image-rendering: pixelated;
+        }
+
+        #pokemonList {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            max-height: calc(100vh - 400px);
+        }
+
+        #pokemonList::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #pokemonList::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+        }
+
+        #pokemonList::-webkit-scrollbar-thumb {
+            background: #FFD700;
+            border-radius: 4px;
+        }
+
+        #pokemonList::-webkit-scrollbar-thumb:hover {
+            background: #FFA500;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #FFD700;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 12px;
+            z-index: 1000;
+            pointer-events: none;
+            display: none;
+            max-width: 250px;
+        }
+
+        .tooltip-title {
+            color: #FFD700;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .tooltip-stat {
+            color: #ddd;
+            margin: 3px 0;
+        }
+
+        .close-tech-tree {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #FF6B6B;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .close-tech-tree:hover {
+            background: #FF5252;
+            transform: scale(1.1);
+        }
+
+        .pokemon-card {
+            background: linear-gradient(135deg, #3a3a5a, #2a2a4a);
+            border: 2px solid #555;
+            border-radius: 10px;
+            padding: 6px;
+            margin: 5px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .pokemon-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 20px rgba(100, 200, 255, 0.5);
+            border-color: #66aaff;
+        }
+
+        .pokemon-card.selected {
+            border-color: #FFD700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+            background: linear-gradient(135deg, #4a4a6a, #3a3a5a);
+        }
+
+        .pokemon-card.locked {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .pokemon-sprite {
+            width: 56px;
+            height: 56px;
+            image-rendering: pixelated;
+            margin-right: 10px;
+        }
+
+        .pokemon-info {
+            flex: 1;
+        }
+
+        .pokemon-name {
+            font-weight: bold;
+            color: #FFD700;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+
+        .pokemon-cost {
+            color: #ffaa00;
+            font-size: 11px;
+            margin-bottom: 2px;
+        }
+
+        .pokemon-stats {
+            color: #aaa;
+            font-size: 10px;
+            margin-bottom: 2px;
+        }
+
+        .pokemon-types {
+            display: flex;
+            gap: 4px;
+        }
+
+        .type-badge {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .type-fire { background: #F08030; }
+        .type-water { background: #6890F0; }
+        .type-grass { background: #78C850; }
+        .type-electric { background: #F8D030; color: #333; }
+        .type-psychic { background: #F85888; }
+        .type-ice { background: #98D8D8; color: #333; }
+        .type-dragon { background: #7038F8; }
+        .type-dark { background: #705848; }
+        .type-fighting { background: #C03028; }
+        .type-flying { background: #A890F0; }
+        .type-poison { background: #A040A0; }
+        .type-ground { background: #E0C068; color: #333; }
+        .type-rock { background: #B8A038; }
+        .type-bug { background: #A8B820; color: #333; }
+        .type-ghost { background: #705898; }
+        .type-steel { background: #B8B8D0; color: #333; }
+        .type-normal { background: #A8A878; }
+        .type-fairy { background: #EE99AC; }
+
+        #techTree {
+            display: none;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.9);
+            border-top: 2px solid #FFD700;
+            height: 100%;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        #techTree.active {
+            display: block;
+        }
+
+        .tech-tree-header {
+            color: #FFD700;
+            font-size: 18px;
+            margin-bottom: 15px;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .tower-stats {
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .tower-stat {
+            color: #ddd;
+            font-size: 12px;
+        }
+
+        .tower-stat-value {
+            color: #FFD700;
+            font-weight: bold;
+        }
+
+        .evolution-path {
+            background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
+            border: 2px solid #666;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .evolution-line {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100px;
+        }
+
+        .mega-branch {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-left: 10px;
+            gap: 10px;
+        }
+
+        .evolution-arrow {
+            color: #FFD700;
+            font-size: 24px;
+            margin: 0 10px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .evolution-pokemon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            border: 2px solid #444;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 80px;
+        }
+
+        .evolution-pokemon:hover:not(.locked) {
+            border-color: #FFD700;
+            transform: scale(1.05);
+        }
+
+        .evolution-pokemon.current {
+            border-color: #4CAF50;
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
+        }
+
+        .evolution-pokemon.available {
+            border-color: #FFD700;
+            animation: available-pulse 2s infinite;
+        }
+
+        @keyframes available-pulse {
+            0%, 100% { box-shadow: 0 0 5px rgba(255, 215, 0, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
+        }
+
+        .evolution-pokemon.locked {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .evolution-pokemon.mega {
+            background: linear-gradient(135deg, #7038F8, #F85888);
+            border-color: #FFD700;
+        }
+
+        .evo-sprite {
+            width: 48px;
+            height: 48px;
+            image-rendering: pixelated;
+        }
+
+        .evo-name {
+            color: #FFD700;
+            font-size: 11px;
+            margin-top: 4px;
+            text-align: center;
+        }
+
+        .evo-req {
+            color: #aaa;
+            font-size: 10px;
+            margin-top: 2px;
+        }
+
+        .mega-indicator {
+            color: #FF69B4;
+            font-size: 9px;
+            font-weight: bold;
+        }
+
+        .upgrade-section {
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 15px;
+        }
+
+        .upgrade-btn {
+            background: linear-gradient(135deg, #5a5a8a, #4a4a7a);
+            border: 2px solid #666;
+            color: white;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 4px;
+            transition: all 0.3s;
+            font-size: 12px;
+            display: inline-block;
+            position: relative;
+        }
+
+        .upgrade-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #FF6B6B;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upgrade-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #6a6a9a, #5a5a8a);
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(100, 150, 255, 0.5);
+        }
+
+        .upgrade-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        #startScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: none; /* Initially hidden */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        #pauseOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1500;
+        }
+
+        #pauseOverlay.active {
+            display: flex;
+        }
+        
+        #quizOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1600;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            backdrop-filter: blur(5px);
+        }
+
+        #quizContent {
+            background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
+            border: 3px solid #FFD700;
+            border-radius: 20px;
+            padding: 20px 30px;
+            text-align: left;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.5);
+        }
+
+        #quizContent h2 {
+            color: #FFD700;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        #quizContent > p {
+            text-align: center;
+            color: #aaa;
+            margin-bottom: 20px;
+        }
+
+        .quiz-question {
+            margin-bottom: 15px;
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #66aaff;
+        }
+
+        .quiz-question p {
+            margin: 0 0 10px 0;
+        }
+        
+        .quiz-input {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            background: #1a1a3a;
+            border: 1px solid #555;
+            border-radius: 5px;
+            color: white;
+            margin-top: 5px;
+        }
+        
+        .quiz-input:focus {
+            outline: none;
+            border-color: #FFD700;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        #submitQuizBtn {
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #1a1a2e;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        #submitQuizBtn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
+        }
+
+        #onScreenMessage {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            z-index: 5000;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: opacity 0.5s, top 0.5s;
+            pointer-events: none;
+            text-align: center;
+        }
+
+
+        .pause-content {
+            background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
+            border: 3px solid #FFD700;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .pause-title {
+            color: #FFD700;
+            font-size: 36px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .pause-info {
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            font-size: 56px;
+            color: #FFD700;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .keyboard-shortcuts {
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        .shortcut-item {
+            color: #aaa;
+            font-size: 11px;
+            margin: 3px 0;
+        }
+
+        .shortcut-key {
+            color: #FFD700;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="expertDifficultyWarning">
+        <div class="warning-content">
+            <h1>EXPERT MODE ACTIVATED</h1>
+            <p>You have chosen a path of significant difficulty. Strategy is key. Prepare for the following changes:</p>
+            <ul>
+                <li>❤️ You have only <b>10 LIVES</b>.</li>
+                <li>💰 Starting resources are reduced.</li>
+                <li>👻 Invisible enemies and high-defense bosses will appear.</li>
+                <li>👹 Enemy HP and speed scale exponentially each wave.</li>
+                <li>💸 The economy is tighter and upgrades cost more.</li>
+            </ul>
+            <p>Can you rise to the challenge?</p>
+            <button id="proceedBtn" onclick="document.getElementById('expertDifficultyWarning').style.display = 'none'; document.getElementById('startScreen').style.display = 'flex';">I'm Ready</button>
+        </div>
+    </div>
+
+
+    <div id="startScreen">
+        <div class="logo">⚡ Pokemon Tower Defense ⚡</div>
+        <p style="color: #FFC107; margin-bottom: 10px; font-size: 24px; font-weight: bold;">Expert Mode</p>
+        <p style="color: #aaa; margin-bottom: 30px;">A true test of skill.</p>
+        <button class="wave-btn" onclick="startGame()">Begin the Challenge</button>
+        <div style="color: white; margin-top: 30px; max-width: 600px;">
+            <p style="color: #FFD700; margin-bottom: 10px;">🎮 How to Play:</p>
+            <div style="color: #aaa; font-size: 14px; line-height: 1.6;">
+                <p>• Click to place Pokemon towers away from the path</p>
+                <p>• Evolve Pokemon with experience or <b style="color: #FF69B4;">Rare Candies</b></p>
+                <p>• <b style="color: #FFA500;">EXPERT DIFFICULTY!</b> Enemy HP scales exponentially per wave!</p>
+                <p>• <b style="color: #705898;">Ghost types</b> are invisible! Use Psychic, Ghost, or Fairy towers to detect them.</p>
+                <p>• <b style="color: #B8A038;">Rock/Steel types</b> have high defense. Exploit their weaknesses!</p>
+                <p>• Legendary bosses appear every 5 waves.</p>
+                <p style="color: #4CAF50;">• Answer science questions before each wave to earn bonus coins!</p>
+            </div>
+        </div>
+        <div class="keyboard-shortcuts" style="margin-top: 20px; color: white;">
+            <p style="color: #FFD700; margin-bottom: 10px;">⌨️ Keyboard Shortcuts:</p>
+            <div class="shortcut-item"><span class="shortcut-key">SPACE</span> - Start Wave</div>
+            <div class="shortcut-item"><span class="shortcut-key">P</span> - Pause Game</div>
+            <div class="shortcut-item"><span class="shortcut-key">1/2/3</span> - Game Speed</div>
+            <div class="shortcut-item"><span class="shortcut-key">ESC</span> - Cancel Selection</div>
+        </div>
+    </div>
+
+    <div id="pauseOverlay">
+        <div class="pause-content">
+            <div class="pause-title">GAME PAUSED</div>
+            <div class="pause-info">
+                <p>Press P to Resume</p>
+                <p style="color: #FF6B6B; margin-top: 10px;">
+                    Current Difficulty: Wave ${gameState.wave}<br>
+                    Enemy HP Multiplier: ${(Math.pow(1.3, gameState.wave - 1)).toFixed(1)}x<br>
+                    Enemies Next Wave: ${15 + Math.floor(gameState.wave * 3)}
+                </p>
+                <div class="keyboard-shortcuts" style="margin-top: 20px;">
+                    <p style="color: #FFD700; margin-bottom: 10px;">Controls:</p>
+                    <div class="shortcut-item"><span class="shortcut-key">SPACE</span> - Start Wave</div>
+                    <div class="shortcut-item"><span class="shortcut-key">1</span> - Normal Speed</div>
+                    <div class="shortcut-item"><span class="shortcut-key">2</span> - Fast Speed (2x)</div>
+                    <div class="shortcut-item"><span class="shortcut-key">3</span> - Ultra Speed (3x)</div>
+                    <div class="shortcut-item"><span class="shortcut-key">ESC</span> - Cancel Selection</div>
+                </div>
+            </div>
+            <button class="wave-btn" onclick="togglePause()">Resume Game</button>
+        </div>
+    </div>
+    
+    <div id="quizOverlay">
+        <div id="quizContent">
+            <h2>Science Quiz!</h2>
+            <p>Answer correctly to earn bonus coins for the upcoming wave!</p>
+            <div id="quizQuestions">
+                <!-- Questions will be generated here by JS -->
+            </div>
+            <button id="submitQuizBtn" onclick="submitQuiz()">Start Wave & Claim Coins</button>
+        </div>
+    </div>
+
+    <div id="gameContainer" style="display: none;">
+        <canvas id="gameCanvas"></canvas>
+        <div id="sidebar">
+            <div id="topPanel">
+                <div id="stats">
+                    <div class="stat-box">
+                        <div class="stat-label">💰 Coins</div>
+                        <div class="stat-value" id="coins">1200</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">❤️ Lives</div>
+                        <div class="stat-value" id="lives">10</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">⭐ Score</div>
+                        <div class="stat-value" id="score">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">💎 Mega Stones</div>
+                        <div class="stat-value" id="megaStones">2</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">🍬 Rare Candies</div>
+                        <div class="stat-value" id="rareCandies">2</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">🌊 Wave</div>
+                        <div class="stat-value" id="currentWave">1</div>
+                    </div>
+                </div>
+                <div id="gameControls">
+                    <button class="control-btn" onclick="togglePause()">⏸️ Pause</button>
+                    <button class="control-btn" onclick="setGameSpeed(1)" id="speed1">1x</button>
+                    <button class="control-btn" onclick="setGameSpeed(2)" id="speed2">2x</button>
+                    <button class="control-btn" onclick="setGameSpeed(3)" id="speed3">3x</button>
+                    <button class="control-btn" onclick="toggleSoundButton()" id="soundBtn">🔊</button>
+                </div>
+                <div id="waveControl">
+                    <div id="waveInfo">Wave 1 - Ready</div>
+                    <div id="waveProgress">
+                        <div id="waveProgressBar"></div>
+                    </div>
+                    <button class="wave-btn" id="startWaveBtn" onclick="startWave()">Start Wave (SPACE)</button>
+                </div>
+                <div id="enemyPreview">
+                    <div class="preview-title">Next Wave Enemies</div>
+                    <div class="enemy-preview-list" id="enemyPreviewList"></div>
+                </div>
+            </div>
+            
+            <div id="pokemonList">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h3 style="color: #FFD700; margin: 0;">🎯 Pokemon Towers</h3>
+                    <select id="pokemonFilter" onchange="filterPokemon()" style="background: #2a2a4a; color: #FFD700; border: 1px solid #666; padding: 4px; border-radius: 4px; font-size: 11px;">
+                        <option value="all">All Types</option>
+                        <option value="affordable">Affordable</option>
+                        <option value="fire">Fire</option>
+                        <option value="water">Water</option>
+                        <option value="grass">Grass</option>
+                        <option value="electric">Electric</option>
+                        <option value="psychic">Psychic</option>
+                        <option value="ice">Ice</option>
+                        <option value="dragon">Dragon</option>
+                        <option value="dark">Dark</option>
+                        <option value="ghost">Ghost</option>
+                        <option value="steel">Steel</option>
+                        <option value="fighting">Fighting</option>
+                        <option value="normal">Normal</option>
+                        <option value="poison">Poison</option>
+                        <option value="ground">Ground</option>
+                        <option value="flying">Flying</option>
+                        <option value="rock">Rock</option>
+                        <option value="bug">Bug</option>
+                        <option value="fairy">Fairy</option>
+                    </select>
+                </div>
+                <div id="pokemonListContent"></div>
+            </div>
+            
+            <div id="techTree">
+                <button class="close-tech-tree" onclick="closeTechTree()">✕</button>
+                <div class="tech-tree-header">Evolution & Mega Evolution Tree</div>
+                <div class="tower-stats" id="towerStats"></div>
+                <div id="evolutionContent"></div>
+                <div class="upgrade-section">
+                    <div style="color: #FFD700; margin-bottom: 8px;">Tower Upgrades</div>
+                    <button class="upgrade-btn" id="dmgUpgrade" onclick="upgradeTowerDamage()">
+                        ⚔️ +30% Damage (200)
+                        <span class="upgrade-count" id="dmgCount">0/3</span>
+                    </button>
+                    <button class="upgrade-btn" id="rngUpgrade" onclick="upgradeTowerRange()">
+                        🎯 +20% Range (160)
+                        <span class="upgrade-count" id="rngCount">0/3</span>
+                    </button>
+                    <button class="upgrade-btn" id="spdUpgrade" onclick="upgradeTowerSpeed()">
+                        ⚡ +25% Speed (180)
+                        <span class="upgrade-count" id="spdCount">0/3</span>
+                    </button>
+                    <button class="upgrade-btn" onclick="evolveTower()">🔮 Force Evolution (300)</button>
+                    <button class="upgrade-btn" onclick="useRareCandy()">🍬 Rare Candy Evolution (1)</button>
+                    <button class="upgrade-btn" onclick="megaEvolveTower()">💎 Mega Evolve (1 Stone)</button>
+                    <button class="upgrade-btn" onclick="sellTower()">💰 Sell Tower</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+    <div id="onScreenMessage"></div>
+
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth - 450;
+        canvas.height = window.innerHeight;
+
+        const SPRITE_URL = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
+        
+        // Mega evolution sprite mapping using actual mega evolution images
+        const MEGA_SPRITE_MAP = {
+            'Mega Charizard X': 'https://img.pokemondb.net/sprites/home/normal/charizard-mega-x.png',
+            'Mega Charizard Y': 'https://img.pokemondb.net/sprites/home/normal/charizard-mega-y.png',
+            'Mega Blastoise': 'https://img.pokemondb.net/sprites/home/normal/blastoise-mega.png',
+            'Mega Venusaur': 'https://img.pokemondb.net/sprites/home/normal/venusaur-mega.png',
+            'Mega Alakazam': 'https://img.pokemondb.net/sprites/home/normal/alakazam-mega.png',
+            'Mega Mewtwo X': 'https://img.pokemondb.net/sprites/home/normal/mewtwo-mega-x.png',
+            'Mega Mewtwo Y': 'https://img.pokemondb.net/sprites/home/normal/mewtwo-mega-y.png',
+            'Mega Lucario': 'https://img.pokemondb.net/sprites/home/normal/lucario-mega.png',
+            'Mega Garchomp': 'https://img.pokemondb.net/sprites/home/normal/garchomp-mega.png',
+            'Mega Gengar': 'https://img.pokemondb.net/sprites/home/normal/gengar-mega.png',
+            'Mega Ampharos': 'https://img.pokemondb.net/sprites/home/normal/ampharos-mega.png',
+            'Mega Gardevoir': 'https://img.pokemondb.net/sprites/home/normal/gardevoir-mega.png',
+            'Mega Blaziken': 'https://img.pokemondb.net/sprites/home/normal/blaziken-mega.png',
+            'Mega Swampert': 'https://img.pokemondb.net/sprites/home/normal/swampert-mega.png',
+            'Mega Sceptile': 'https://img.pokemondb.net/sprites/home/normal/sceptile-mega.png',
+            'Mega Rayquaza': 'https://img.pokemondb.net/sprites/home/normal/rayquaza-mega.png',
+            'Mega Salamence': 'https://img.pokemondb.net/sprites/home/normal/salamence-mega.png',
+            'Mega Metagross': 'https://img.pokemondb.net/sprites/home/normal/metagross-mega.png',
+            'Mega Tyranitar': 'https://img.pokemondb.net/sprites/home/normal/tyranitar-mega.png',
+            'Mega Gyarados': 'https://img.pokemondb.net/sprites/home/normal/gyarados-mega.png',
+            'Mega Scizor': 'https://img.pokemondb.net/sprites/home/normal/scizor-mega.png',
+            'Mega Heracross': 'https://img.pokemondb.net/sprites/home/normal/heracross-mega.png',
+            'Mega Houndoom': 'https://img.pokemondb.net/sprites/home/normal/houndoom-mega.png',
+            'Mega Absol': 'https://img.pokemondb.net/sprites/home/normal/absol-mega.png',
+            'Mega Manectric': 'https://img.pokemondb.net/sprites/home/normal/manectric-mega.png',
+            'Mega Banette': 'https://img.pokemondb.net/sprites/home/normal/banette-mega.png',
+            'Mega Pidgeot': 'https://img.pokemondb.net/sprites/home/normal/pidgeot-mega.png',
+            'Mega Beedrill': 'https://img.pokemondb.net/sprites/home/normal/beedrill-mega.png',
+            'Mega Slowbro': 'https://img.pokemondb.net/sprites/home/normal/slowbro-mega.png',
+            'Mega Altaria': 'https://img.pokemondb.net/sprites/home/normal/altaria-mega.png',
+            'Mega Gallade': 'https://img.pokemondb.net/sprites/home/normal/gallade-mega.png',
+            'Mega Lopunny': 'https://img.pokemondb.net/sprites/home/normal/lopunny-mega.png',
+            'Mega Sableye': 'https://img.pokemondb.net/sprites/home/normal/sableye-mega.png',
+            'Mega Mawile': 'https://img.pokemondb.net/sprites/home/normal/mawile-mega.png',
+            'Mega Aggron': 'https://img.pokemondb.net/sprites/home/normal/aggron-mega.png',
+            'Mega Medicham': 'https://img.pokemondb.net/sprites/home/normal/medicham-mega.png',
+            'Mega Sharpedo': 'https://img.pokemondb.net/sprites/home/normal/sharpedo-mega.png',
+            'Mega Camerupt': 'https://img.pokemondb.net/sprites/home/normal/camerupt-mega.png',
+            'Mega Abomasnow': 'https://img.pokemondb.net/sprites/home/normal/abomasnow-mega.png',
+            'Mega Glalie': 'https://img.pokemondb.net/sprites/home/normal/glalie-mega.png',
+            'Mega Steelix': 'https://img.pokemondb.net/sprites/home/normal/steelix-mega.png',
+            'Mega Kangaskhan': 'https://img.pokemondb.net/sprites/home/normal/kangaskhan-mega.png',
+            'Mega Pinsir': 'https://img.pokemondb.net/sprites/home/normal/pinsir-mega.png',
+            'Mega Aerodactyl': 'https://img.pokemondb.net/sprites/home/normal/aerodactyl-mega.png',
+            'Mega Latios': 'https://img.pokemondb.net/sprites/home/normal/latios-mega.png',
+            'Mega Latias': 'https://img.pokemondb.net/sprites/home/normal/latias-mega.png',
+            'Mega Audino': 'https://img.pokemondb.net/sprites/home/normal/audino-mega.png',
+            'Primal Groudon': 'https://img.pokemondb.net/sprites/home/normal/groudon-primal.png',
+            'Primal Kyogre': 'https://img.pokemondb.net/sprites/home/normal/kyogre-primal.png'
+        };
+        
+        // Sound system
+        class SoundManager {
+            constructor() {
+                this.audioContext = null;
+                this.sounds = {};
+                this.enabled = true;
+                this.volume = 0.3;
+            }
+
+            init() {
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    this.masterGain = this.audioContext.createGain();
+                    this.masterGain.gain.value = this.volume;
+                    this.masterGain.connect(this.audioContext.destination);
+                    
+                    // Create synthesized sound effects
+                    this.createSounds();
+                } catch (e) {
+                    console.log('Web Audio API not supported');
+                    this.enabled = false;
+                }
+            }
+
+            createSounds() {
+                // Store sound generators
+                this.soundGenerators = {
+                    place: () => this.createPlaceSound(),
+                    shoot: () => this.createShootSound(),
+                    hit: () => this.createHitSound(),
+                    explosion: () => this.createExplosionSound(),
+                    levelUp: () => this.createLevelUpSound(),
+                    evolve: () => this.createEvolveSound(),
+                    megaEvolve: () => this.createMegaEvolveSound(),
+                    freeze: () => this.createFreezeSound(),
+                    thunder: () => this.createThunderSound(),
+                    earthquake: () => this.createEarthquakeSound(),
+                    enemyHit: () => this.createEnemyHitSound(),
+                    waveStart: () => this.createWaveStartSound(),
+                    waveComplete: () => this.createWaveCompleteSound(),
+                    gameOver: () => this.createGameOverSound(),
+                    burn: () => this.createBurnSound(),
+                    psychic: () => this.createPsychicSound()
+                };
+            }
+
+            playSound(soundName) {
+                if (!this.enabled || !this.audioContext || !this.soundGenerators[soundName]) return;
+                
+                try {
+                    this.soundGenerators[soundName]();
+                } catch (e) {
+                    console.log('Error playing sound:', soundName);
+                }
+            }
+
+            createPlaceSound() {
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                
+                osc.frequency.setValueAtTime(800, this.audioContext.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1200, this.audioContext.currentTime + 0.1);
+                
+                gain.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.2);
+                
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+                
+                osc.start();
+                osc.stop(this.audioContext.currentTime + 0.2);
+            }
+
+            createShootSound() {
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                
+                osc.frequency.setValueAtTime(600, this.audioContext.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(300, this.audioContext.currentTime + 0.1);
+                
+                gain.gain.setValueAtTime(0.2, this.audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
+                
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+                
+                osc.start();
+                osc.stop(this.audioContext.currentTime + 0.1);
+            }
+
+            createHitSound() {
+                const noise = this.audioContext.createBufferSource();
+                const buffer = this.audioContext.createBuffer(1, 4410, 44100);
+                const data = buffer.getChannelData(0);
+                
+                for (let i = 0; i < 4410; i++) {
+                    data[i] = (Math.random() - 0.5) * 2;
+                }
+                
+                noise.buffer = buffer;
+                
+                const filter = this.audioContext.createBiquadFilter();
+                filter.type = 'highpass';
+                filter.frequency.value = 1000;
+                
+                const gain = this.audioContext.createGain();
+                gain.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
+                
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.masterGain);
+                
+                noise.start();
+            }
+
+            createExplosionSound() {
+                const noise = this.audioContext.createBufferSource();
+                const buffer = this.audioContext.createBuffer(1, 8820, 44100);
+                const data = buffer.getChannelData(0);
+                
+                for (let i = 0; i < 8820; i++) {
+                    data[i] = (Math.random() - 0.5) * 2 * Math.exp(-i / 2000);
+                }
+                
+                noise.buffer = buffer;
+                
+                const filter = this.audioContext.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(3000, this.audioContext.currentTime);
+                filter.frequency.exponentialRampToValueAtTime(400, this.audioContext.currentTime + 0.2);
+                
+                const gain = this.audioContext.createGain();
+                gain.gain.setValueAtTime(0.5, this.audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+                
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.masterGain);
+                
+                noise.start();
+            }
+
+            createLevelUpSound() {
+                const osc1 = this.audioContext.createOscillator();
+                const osc2 = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                
+                osc1.frequency.setValueAtTime(400, this.audioContext.currentTime);
+                osc1.frequency.exponentialRampToValueAtTime(800, this.audioContext.currentTime + 0.2);
+                
+                osc2.frequency.setValueAtTime(600, this.audioContext.currentTime);
+                osc2.frequency.exponentialRampToValueAtTime(1200, this.audioContext.currentTime + 0.2);
+                
+                gain.gain.setValueAtTime(0.2, this.audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+                
+                osc1.connect(gain);
+                osc2.connect(gain);
+                gain.connect(this.masterGain);
+                
+                osc1.start();
+                osc2.start();
+                osc1.stop(this.audioContext.currentTime + 0.3);
+                osc2.stop(this.audioContext.currentTime + 0.3);
+            }
+
+            createEvolveSound() {
+                for (let i = 0; i < 3; i++) {
+                    setTimeout(() => {
+                        const osc = this.audioContext.createOscillator();
+                        const gain = this.audioContext.createGain();
+                        
+                        osc.frequency.setValueAtTime(300 + i * 200, this.audioContext.currentTime);
+                        osc.frequency.exponentialRampToValueAtTime(600 + i * 300, this.audioContext.currentTime + 0.3);
+                        
+                        gain.gain.setValueAtTime(0.2, this.audioContext.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.4);
+                        
+                        osc.connect(gain);
+                        gain.connect(this.masterGain);
+                        
+                        osc.start();
+                        osc.stop(this.audioContext.currentTime + 0.4);
+                    }, i * 100);
+                }
+            }
+
+            createMegaEvolveSound() {
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                const lfo = this.audioContext.createOscillator();
+                const lfoGain = this.audioContext.createGain();
+                
+                lfo.frequency.value = 10;
+                lfoGain.gain.value = 100;
+                
+                lfo.connect(lfoGain);
+                lfoGain.connect(osc.frequency);
+                
+                osc.frequency.setValueAtTime(200, this.audioContext.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1600, this.audioContext.currentTime + 0.5);
+                
+                gain.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.6);
+                
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+                
+                lfo.start();
+                osc.start();
+                lfo.stop(this.audioContext.currentTime + 0.6);
+                osc.stop(this.audioContext.currentTime + 0.6);
+            }
+
+            createFreezeSound() {
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                
+                osc.frequency.setValueAtTime(2000, this.audioContext.currentTime);
+                osc.frequency.linearRampToValueAtTime(4000, this.audioContext.currentTime + 0.2);
+                
+                gain.gain.setValueAtTime(0.2, this.audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+                
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+                
+                osc.start();
+                osc.stop(this.audioContext.currentTime + 0.3);
+            }
+
+            createThunderSound() {
+                const noise = this.audioContext.createBufferSource();
+                const buffer = this.audioContext.createBuffer(1, 22050, 44100);
+                const data = buffer.getChannelData(0);
+                
+                for (let i = 0; i < 22050; i++) {
+                    data[i] = (Math.random() - 0.5) * 2 * Math.exp(-i / 4000);
+                }
+                
+                noise.buffer = buffer;
+                
+                const filter = this.audioContext.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(1000, this.audioContext.currentTime);
+                filter.Q.value = 2;
+                
+                const gain = this.audioContext.createGain();
+                gain.gain.setValueAtTime(0.6, this.audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.5);
+                
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.masterGain);
+                
+                noise.start();
+            }
+
+            createEarthquakeSound() {
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(20, this.audioContext.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(60, this.audioContext.currentTime + 0.5);
+                
+                gain.gain.setValueAtTime(0.4, this.audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.6);
+                
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+                
+                osc.start();
+                osc.stop(this.audioContext.currentTime + 0.6);
+            }
+
+            createEnemyHitSound() {
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                
+                osc.frequency.setValueAtTime(200, this.audioContext.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(100, this.audioContext.currentTime + 0.1);
+                
+                gain.gain.setValueAtTime(0.15, this.audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
+                
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+                
+                osc.start();
+                osc.stop(this.audioContext.currentTime + 0.1);
+            }
+
+            createWaveStartSound() {
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                
+                osc.frequency.setValueAtTime(440, this.audioContext.currentTime);
+                osc.frequency.setValueAtTime(554, this.audioContext.currentTime + 0.1);
+                osc.frequency.setValueAtTime(659, this.audioContext.currentTime + 0.2);
+                
+                gain.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.4);
+                
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+                
+                osc.start();
+                osc.stop(this.audioContext.currentTime + 0.4);
+            }
+
+            createWaveCompleteSound() {
+                const notes = [523, 659, 784, 1047];
+                notes.forEach((freq, i) => {
+                    setTimeout(() => {
+                        const osc = this.audioContext.createOscillator();
+                        const gain = this.audioContext.createGain();
+                        
+                        osc.frequency.value = freq;
+                        gain.gain.setValueAtTime(0.2, this.audioContext.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+                        
+                        osc.connect(gain);
+                        gain.connect(this.masterGain);
+                        
+                        osc.start();
+                        osc.stop(this.audioContext.currentTime + 0.3);
+                    }, i * 100);
+                });
+            }
+
+            createGameOverSound() {
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                
+                osc.frequency.setValueAtTime(440, this.audioContext.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(110, this.audioContext.currentTime + 1);
+                
+                gain.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 1.2);
+                
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+                
+                osc.start();
+                osc.stop(this.audioContext.currentTime + 1.2);
+            }
+
+            createBurnSound() {
+                const noise = this.audioContext.createBufferSource();
+                const buffer = this.audioContext.createBuffer(1, 4410, 44100);
+                const data = buffer.getChannelData(0);
+                
+                for (let i = 0; i < 4410; i++) {
+                    data[i] = (Math.random() - 0.5) * 0.5;
+                }
+                
+                noise.buffer = buffer;
+                
+                const filter = this.audioContext.createBiquadFilter();
+                filter.type = 'highpass';
+                filter.frequency.value = 2000;
+                
+                const gain = this.audioContext.createGain();
+                gain.gain.setValueAtTime(0.15, this.audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.2);
+                
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.masterGain);
+                
+                noise.start();
+            }
+
+            createPsychicSound() {
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                const lfo = this.audioContext.createOscillator();
+                const lfoGain = this.audioContext.createGain();
+                
+                lfo.frequency.value = 5;
+                lfoGain.gain.value = 50;
+                
+                lfo.connect(lfoGain);
+                lfoGain.connect(osc.frequency);
+                
+                osc.frequency.setValueAtTime(800, this.audioContext.currentTime);
+                
+                gain.gain.setValueAtTime(0.2, this.audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.4);
+                
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+                
+                lfo.start();
+                osc.start();
+                lfo.stop(this.audioContext.currentTime + 0.4);
+                osc.stop(this.audioContext.currentTime + 0.4);
+            }
+
+            toggleSound() {
+                this.enabled = !this.enabled;
+                return this.enabled;
+            }
+
+            setVolume(value) {
+                this.volume = Math.max(0, Math.min(1, value));
+                if (this.masterGain) {
+                    this.masterGain.gain.value = this.volume;
+                }
+            }
+        }
+
+        const soundManager = new SoundManager();
+        
+        // Game state
+        let gameState = {
+            coins: 1200,
+            lives: 10,
+            score: 0,
+            megaStones: 2,
+            rareCandies: 2,
+            wave: 1,
+            waveActive: false,
+            quizActive: false, // NEW: To disable shortcuts during quiz
+            selectedPokemon: null,
+            selectedTower: null,
+            towers: [],
+            enemies: [],
+            projectiles: [],
+            particles: [],
+            attackEffects: [],
+            path: [],
+            gameRunning: false,
+            gamePaused: false,
+            gameSpeed: 1,
+            enemiesInWave: 8,
+            enemiesSpawned: 0,
+            bossesSpawned: false, // To track boss spawning
+            spawnTimer: 0,
+            towerIdCounter: 0,
+            activeAnimations: [],
+            totalKills: 0,
+            totalDamage: 0,
+            lastFrameTime: 0
+        };
+
+        // --- SCIENCE QUIZ DATA ---
+        const scienceData = [
+            { term: "Pollination", definition: "is the transfer of pollen grains from the anthers to the stigma." },
+            { term: "Fertilisation", definition: "is the process in which the male sex cell fuses with the female sex cell and genetic information is exchanged." },
+            { term: "Seed dispersal", definition: "is the scattering of fruits or seeds." },
+            { term: "Germination", definition: "is the process whereby a seed develops into a young plant if seeds have oxygen, water and a suitable temperature." },
+            { term: "Boiling", definition: "is the process whereby a substance in a liquid state changes to the gaseous state when heated at a fixed temperature." },
+            { term: "Evaporation", definition: "is the process whereby a substance at a liquid state changes into a gaseous state as it gains heat at any temperature." },
+            { term: "Condensation", definition: "is the process whereby a substance at a gaseous state changes into a liquid state as it loses heat at any temperature." },
+            { term: "Freezing", definition: "is the process whereby a substance at a liquid state changes into a solid state as it loses heat at a fixed temperature." },
+            { term: "Melting", definition: "is the process whereby a substance at a solid state changes into a liquid state as it gains heat at a fixed temperature." },
+            { term: "Habitat", definition: "is a place where organisms live." },
+            { term: "Population", definition: "is a group of organisms of the same kind, living and reproducing at a given place and time." },
+            { term: "Community", definition: "consists of many populations living together in a particular place." },
+            { term: "Energy", definition: "is the capacity to work." },
+            { term: "Force", definition: "is a push or pull." },
+            { term: "Gravitational force", definition: "is a force of attraction between objects and the ground." },
+            { term: "Frictional force", definition: "is a force that opposes motion between two contacting surfaces." },
+            { term: "Elastic spring force", definition: "is a force exerted by a stretched or compressed object to return to its original length." },
+            { term: "Magnetic force", definition: "is a force exerted by magnets that allows magnets to attract or repel each other." },
+            { term: "Photosynthesis", definition: "is the process whereby plants take in carbon dioxide through the stomata, absorb water through the roots, and light is trapped by chlorophyll to produce sugar and oxygen." },
+            { term: "Deforestation", definition: "is the large-scale clearing of trees by burning or cutting." }
+        ];
+
+        // --- SCIENCE QUIZ FUNCTIONS ---
+        function showQuiz() {
+            if (gameState.waveActive) return;
+            gameState.quizActive = true; // Disable shortcuts
+
+            const shuffledData = [...scienceData].sort(() => 0.5 - Math.random());
+            const selectedQuestions = shuffledData.slice(0, 4);
+            
+            const quizQuestionsDiv = document.getElementById('quizQuestions');
+            quizQuestionsDiv.innerHTML = '';
+
+            selectedQuestions.forEach((qData, index) => {
+                let questionHTML = `
+                    <div class="quiz-question" data-correct-answer="${qData.term}">
+                        <p><b>Question ${index + 1}:</b> Fill in the blank.</p>
+                        <p style="font-style: italic;">"<code>_________</code> ${qData.definition}"</p>
+                        <input type="text" class="quiz-input" name="question-${index}" placeholder="Enter the term...">
+                    </div>`;
+                quizQuestionsDiv.innerHTML += questionHTML;
+            });
+            
+            document.getElementById('quizOverlay').style.display = 'flex';
+            document.querySelector('.quiz-input').focus();
+        }
+
+        function showOnScreenMessage(message, duration = 3000) {
+            const msgEl = document.getElementById('onScreenMessage');
+            if (!msgEl) return;
+            msgEl.textContent = message;
+            msgEl.style.opacity = '1';
+            msgEl.style.top = '20px';
+
+            setTimeout(() => {
+                msgEl.style.opacity = '0';
+                msgEl.style.top = '-50px';
+            }, duration);
+        }
+
+        function submitQuiz() {
+            let correctCount = 0;
+            const questions = document.querySelectorAll('.quiz-question');
+
+            questions.forEach((questionDiv, index) => {
+                const correctAnswer = questionDiv.dataset.correctAnswer;
+                const userInput = questionDiv.querySelector(`input[name="question-${index}"]`).value;
+                if (userInput.trim().toLowerCase().replace(/\s+/g, ' ') === correctAnswer.toLowerCase().replace(/\s+/g, ' ')) {
+                    correctCount++;
+                }
+            });
+
+            const reward = correctCount * 50;
+            gameState.coins += reward;
+            document.getElementById('coins').textContent = gameState.coins;
+
+            document.getElementById('quizOverlay').style.display = 'none';
+            gameState.quizActive = false; // Re-enable shortcuts
+            showOnScreenMessage(`You got ${correctCount}/4 correct and earned ${reward} coins!`);
+
+            // Wave starting logic
+            gameState.waveActive = true;
+            gameState.enemiesInWave = 15 + Math.floor(gameState.wave * 3); 
+            if (gameState.wave > 20) {
+                gameState.enemiesInWave += Math.floor((gameState.wave - 20) * 1.5);
+            }
+            gameState.enemiesSpawned = 0;
+            gameState.spawnTimer = 0;
+            
+            soundManager.playSound('waveStart');
+            
+            document.getElementById('startWaveBtn').disabled = true;
+            document.getElementById('waveInfo').textContent = `Wave ${gameState.wave} - In Progress`;
+            
+            updateEnemyPreview();
+        }
+
+        // Tower Pokemon definitions
+        const towerPokemon = [
+            // ... (All pokemon definitions go here, but with modifications)
+            // Example modification for Gengar and Lucario:
+            {
+                id: 13, dexId: 448, name: 'Lucario', types: ['fighting', 'steel'], cost: 280,
+                damage: 50, range: 70, attackSpeed: 2.5, // Low range, high speed
+                description: 'Aura Pokemon - Unleashes a flurry of punches at close range.',
+                evolutionLine: [
+                    {dexId: 447, name: 'Riolu', level: 1, attack: 'Force Palm'},
+                    {dexId: 448, name: 'Lucario', level: 20, attack: 'Close Combat'}, // Changed attack name
+                    {dexId: 448, name: 'Mega Lucario', level: 45, attack: 'Close Combat', mega: true}
+                ]
+            },
+            {
+                id: 14, dexId: 94, name: 'Gengar', types: ['ghost', 'poison'], cost: 250, hasDetect: true,
+                damage: 65, range: 140, attackSpeed: 0.6, // Higher damage, slower speed
+                description: 'Shadow Pokemon - 50% chance to put enemies to sleep. Can detect invisible enemies.',
+                evolutionLine: [
+                    {dexId: 92, name: 'Gastly', level: 1, attack: 'Lick'},
+                    {dexId: 93, name: 'Haunter', level: 25, attack: 'Shadow Ball'},
+                    {dexId: 94, name: 'Gengar', level: 40, attack: 'Dark Void'}, // This name maps to the sleep attack
+                    {dexId: 94, name: 'Mega Gengar', level: 50, attack: 'Nightmare', mega: true}
+                ]
+            },
+            {
+                id: 9, dexId: 150, name: 'Mewtwo', types: ['psychic'], cost: 600, hasDetect: true,
+                damage: 75, range: 180, attackSpeed: 0.8,
+                description: 'Legendary Psychic - Devastating power. Can detect invisible enemies.',
+                evolutionLine: [
+                    {dexId: 150, name: 'Mewtwo', level: 1, attack: 'Psystrike'},
+                    {dexId: 150, name: 'Mega Mewtwo X', level: 50, attack: 'Focus Blast', mega: true, types: ['psychic', 'fighting']},
+                    {dexId: 150, name: 'Mega Mewtwo Y', level: 50, attack: 'Psyshock', mega: true}
+                ]
+            },
+            // ... (Rest of the original towerPokemon array with hasDetect and Fighting changes)
+            {
+                id: 1, dexId: 4, name: 'Charmander', types: ['fire'], cost: 180,
+                damage: 30, range: 100, attackSpeed: 0.7,
+                description: 'Fire starter - Strong against Grass, Bug, Ice, Steel',
+                evolutionLine: [
+                    {dexId: 4, name: 'Charmander', level: 1, attack: 'Ember'},
+                    {dexId: 5, name: 'Charmeleon', level: 16, attack: 'Fire Fang'},
+                    {dexId: 6, name: 'Charizard', level: 36, attack: 'Flamethrower', types: ['fire', 'flying']},
+                    {dexId: 6, name: 'Mega Charizard X', level: 50, attack: 'Dragon Claw', mega: true, types: ['fire', 'dragon']},
+                    {dexId: 6, name: 'Mega Charizard Y', level: 50, attack: 'Fire Blast', mega: true, types: ['fire', 'flying']}
+                ]
+            },
+            {
+                id: 2, dexId: 7, name: 'Squirtle', types: ['water'], cost: 160,
+                damage: 28, range: 110, attackSpeed: 0.75,
+                description: 'Water starter - Strong against Fire, Ground, Rock',
+                evolutionLine: [
+                    {dexId: 7, name: 'Squirtle', level: 1, attack: 'Bubble'},
+                    {dexId: 8, name: 'Wartortle', level: 16, attack: 'Water Pulse'},
+                    {dexId: 9, name: 'Blastoise', level: 36, attack: 'Hydro Pump'},
+                    {dexId: 9, name: 'Mega Blastoise', level: 50, attack: 'Hydro Cannon', mega: true}
+                ]
+            },
+            {
+                id: 3, dexId: 1, name: 'Bulbasaur', types: ['grass', 'poison'], cost: 150,
+                damage: 25, range: 120, attackSpeed: 0.8,
+                description: 'Grass starter - Strong against Water, Ground, Rock',
+                evolutionLine: [
+                    {dexId: 1, name: 'Bulbasaur', level: 1, attack: 'Vine Whip'},
+                    {dexId: 2, name: 'Ivysaur', level: 16, attack: 'Razor Leaf'},
+                    {dexId: 3, name: 'Venusaur', level: 32, attack: 'Solar Beam'},
+                    {dexId: 3, name: 'Mega Venusaur', level: 50, attack: 'Frenzy Plant', mega: true}
+                ]
+            },
+            {
+                id: 4, dexId: 255, name: 'Torchic', types: ['fire'], cost: 170,
+                damage: 32, range: 95, attackSpeed: 0.9,
+                description: 'Fire/Fighting evolution with high speed',
+                evolutionLine: [
+                    {dexId: 255, name: 'Torchic', level: 1, attack: 'Ember'},
+                    {dexId: 256, name: 'Combusken', level: 16, attack: 'Close Combat', types: ['fire', 'fighting']},
+                    {dexId: 257, name: 'Blaziken', level: 36, attack: 'Close Combat', types: ['fire', 'fighting']},
+                    {dexId: 257, name: 'Mega Blaziken', level: 50, attack: 'Close Combat', mega: true, types: ['fire', 'fighting']}
+                ]
+            },
+            {
+                id: 5, dexId: 258, name: 'Mudkip', types: ['water'], cost: 165,
+                damage: 30, range: 105, attackSpeed: 0.75,
+                description: 'Water/Ground evolution with high HP',
+                evolutionLine: [
+                    {dexId: 258, name: 'Mudkip', level: 1, attack: 'Water Gun'},
+                    {dexId: 259, name: 'Marshtomp', level: 16, attack: 'Mud Shot', types: ['water', 'ground']},
+                    {dexId: 260, name: 'Swampert', level: 36, attack: 'Muddy Water', types: ['water', 'ground']},
+                    {dexId: 260, name: 'Mega Swampert', level: 50, attack: 'Earthquake', mega: true, types: ['water', 'ground']}
+                ]
+            },
+            {
+                id: 6, dexId: 252, name: 'Treecko', types: ['grass'], cost: 155,
+                damage: 27, range: 115, attackSpeed: 0.95,
+                description: 'Grass/Dragon mega evolution',
+                evolutionLine: [
+                    {dexId: 252, name: 'Treecko', level: 1, attack: 'Pound'},
+                    {dexId: 253, name: 'Grovyle', level: 16, attack: 'Leaf Blade'},
+                    {dexId: 254, name: 'Sceptile', level: 36, attack: 'Leaf Storm'},
+                    {dexId: 254, name: 'Mega Sceptile', level: 50, attack: 'Dragon Pulse', mega: true, types: ['grass', 'dragon']}
+                ]
+            },
+            {
+                id: 7, dexId: 25, name: 'Pikachu', types: ['electric'], cost: 200,
+                damage: 35, range: 130, attackSpeed: 1.0,
+                description: 'Electric mouse - Chain lightning attacks',
+                evolutionLine: [
+                    {dexId: 172, name: 'Pichu', level: 1, attack: 'Thunder Shock'},
+                    {dexId: 25, name: 'Pikachu', level: 10, attack: 'Thunderbolt'},
+                    {dexId: 26, name: 'Raichu', level: 25, attack: 'Thunder'}
+                ]
+            },
+            {
+                id: 8, dexId: 133, name: 'Eevee', types: ['normal'], cost: 180,
+                damage: 25, range: 110, attackSpeed: 0.8,
+                description: 'Evolution Pokemon - Choose your evolution path',
+                evolutionLine: [
+                    {dexId: 133, name: 'Eevee', level: 1, attack: 'Tackle'},
+                    {dexId: 134, name: 'Vaporeon', level: 20, attack: 'Water Pulse', types: ['water']},
+                    {dexId: 135, name: 'Jolteon', level: 20, attack: 'Thunderbolt', types: ['electric']},
+                    {dexId: 136, name: 'Flareon', level: 20, attack: 'Fire Blast', types: ['fire']},
+                    {dexId: 196, name: 'Espeon', level: 20, attack: 'Psychic', types: ['psychic'], hasDetect: true},
+                    {dexId: 197, name: 'Umbreon', level: 20, attack: 'Dark Pulse', types: ['dark']},
+                    {dexId: 700, name: 'Sylveon', level: 20, attack: 'Moonblast', types: ['fairy'], hasDetect: true},
+                    {dexId: 471, name: 'Glaceon', level: 20, attack: 'Ice Beam', types: ['ice']},
+                    {dexId: 470, name: 'Leafeon', level: 20, attack: 'Leaf Blade', types: ['grass']}
+                ]
+            },
+            {
+                id: 10, dexId: 384, name: 'Rayquaza', types: ['dragon', 'flying'], cost: 650,
+                damage: 80, range: 170, attackSpeed: 0.9,
+                description: 'Sky High Pokemon - Dragon Ascent',
+                evolutionLine: [
+                    {dexId: 384, name: 'Rayquaza', level: 1, attack: 'Dragon Ascent'},
+                    {dexId: 384, name: 'Mega Rayquaza', level: 50, attack: 'Dragon Ascent', mega: true}
+                ]
+            },
+            {
+                id: 11, dexId: 383, name: 'Groudon', types: ['ground'], cost: 700,
+                damage: 85, range: 140, attackSpeed: 0.6,
+                description: 'Continent Pokemon - Precipice Blades',
+                evolutionLine: [
+                    {dexId: 383, name: 'Groudon', level: 1, attack: 'Earthquake'},
+                    {dexId: 383, name: 'Primal Groudon', level: 50, attack: 'Precipice Blades', mega: true, types: ['ground', 'fire']}
+                ]
+            },
+            {
+                id: 12, dexId: 382, name: 'Kyogre', types: ['water'], cost: 700,
+                damage: 85, range: 160, attackSpeed: 0.7,
+                description: 'Sea Basin Pokemon - Origin Pulse',
+                evolutionLine: [
+                    {dexId: 382, name: 'Kyogre', level: 1, attack: 'Water Spout'},
+                    {dexId: 382, name: 'Primal Kyogre', level: 50, attack: 'Origin Pulse', mega: true}
+                ]
+            },
+            {
+                id: 15, dexId: 445, name: 'Garchomp', types: ['dragon', 'ground'], cost: 350,
+                damage: 60, range: 100, attackSpeed: 0.8,
+                description: 'Mach Pokemon - AOE Earthquake',
+                evolutionLine: [
+                    {dexId: 443, name: 'Gible', level: 1, attack: 'Sand Attack'},
+                    {dexId: 444, name: 'Gabite', level: 24, attack: 'Dragon Claw'},
+                    {dexId: 445, name: 'Garchomp', level: 48, attack: 'Earthquake'},
+                    {dexId: 445, name: 'Mega Garchomp', level: 55, attack: 'Dragon Rush', mega: true}
+                ]
+            },
+            {
+                id: 16, dexId: 376, name: 'Metagross', types: ['steel', 'psychic'], cost: 400, hasDetect: true,
+                damage: 65, range: 110, attackSpeed: 0.6,
+                description: 'Iron Leg Pokemon - Meteor Mash. Can detect invisible enemies.',
+                evolutionLine: [
+                    {dexId: 374, name: 'Beldum', level: 1, attack: 'Take Down'},
+                    {dexId: 375, name: 'Metang', level: 20, attack: 'Metal Claw'},
+                    {dexId: 376, name: 'Metagross', level: 45, attack: 'Meteor Mash'},
+                    {dexId: 376, name: 'Mega Metagross', level: 55, attack: 'Bullet Punch', mega: true}
+                ]
+            },
+            {
+                id: 17, dexId: 373, name: 'Salamence', types: ['dragon', 'flying'], cost: 380,
+                damage: 58, range: 135, attackSpeed: 0.85,
+                description: 'Dragon Pokemon - Draco Meteor',
+                evolutionLine: [
+                    {dexId: 371, name: 'Bagon', level: 1, attack: 'Dragon Breath'},
+                    {dexId: 372, name: 'Shelgon', level: 30, attack: 'Dragon Claw'},
+                    {dexId: 373, name: 'Salamence', level: 50, attack: 'Draco Meteor'},
+                    {dexId: 373, name: 'Mega Salamence', level: 60, attack: 'Aerilate', mega: true}
+                ]
+            },
+            {
+                id: 18, dexId: 282, name: 'Gardevoir', types: ['psychic', 'fairy'], cost: 270, hasDetect: true,
+                damage: 42, range: 160, attackSpeed: 0.85,
+                description: 'Embrace Pokemon - Charm and confusion. Can detect invisible enemies.',
+                evolutionLine: [
+                    {dexId: 280, name: 'Ralts', level: 1, attack: 'Confusion'},
+                    {dexId: 281, name: 'Kirlia', level: 20, attack: 'Psychic'},
+                    {dexId: 282, name: 'Gardevoir', level: 30, attack: 'Moonblast'},
+                    {dexId: 282, name: 'Mega Gardevoir', level: 45, attack: 'Dazzling Gleam', mega: true}
+                ]
+            },
+            {
+                id: 19, dexId: 65, name: 'Alakazam', types: ['psychic'], cost: 260, hasDetect: true,
+                damage: 48, range: 150, attackSpeed: 0.7,
+                description: 'Psi Pokemon - High special attack. Can detect invisible enemies.',
+                evolutionLine: [
+                    {dexId: 63, name: 'Abra', level: 1, attack: 'Confusion'},
+                    {dexId: 64, name: 'Kadabra', level: 16, attack: 'Psybeam'},
+                    {dexId: 65, name: 'Alakazam', level: 36, attack: 'Psychic'},
+                    {dexId: 65, name: 'Mega Alakazam', level: 50, attack: 'Future Sight', mega: true}
+                ]
+            },
+            {
+                id: 20, dexId: 248, name: 'Tyranitar', types: ['rock', 'dark'], cost: 420,
+                damage: 70, range: 100, attackSpeed: 0.5,
+                description: 'Armor Pokemon - Stone Edge AOE',
+                evolutionLine: [
+                    {dexId: 246, name: 'Larvitar', level: 1, attack: 'Rock Throw'},
+                    {dexId: 247, name: 'Pupitar', level: 30, attack: 'Rock Slide'},
+                    {dexId: 248, name: 'Tyranitar', level: 55, attack: 'Stone Edge'},
+                    {dexId: 248, name: 'Mega Tyranitar', level: 65, attack: 'Hyper Beam', mega: true}
+                ]
+            },
+            {
+                id: 21, dexId: 130, name: 'Gyarados', types: ['water', 'flying'], cost: 320,
+                damage: 58, range: 115, attackSpeed: 0.75,
+                description: 'Atrocious Pokemon - Dragon Rage',
+                evolutionLine: [
+                    {dexId: 129, name: 'Magikarp', level: 1, attack: 'Splash'},
+                    {dexId: 130, name: 'Gyarados', level: 20, attack: 'Dragon Rage'},
+                    {dexId: 130, name: 'Mega Gyarados', level: 50, attack: 'Hyper Beam', mega: true, types: ['water', 'dark']}
+                ]
+            },
+            {
+                id: 22, dexId: 212, name: 'Scizor', types: ['bug', 'steel'], cost: 290,
+                damage: 52, range: 105, attackSpeed: 1.2,
+                description: 'Pincer Pokemon - Bullet Punch priority',
+                evolutionLine: [
+                    {dexId: 123, name: 'Scyther', level: 1, attack: 'Fury Cutter', types: ['bug', 'flying']},
+                    {dexId: 212, name: 'Scizor', level: 25, attack: 'Bullet Punch'},
+                    {dexId: 212, name: 'Mega Scizor', level: 50, attack: 'U-turn', mega: true}
+                ]
+            },
+            {
+                id: 23, dexId: 229, name: 'Houndoom', types: ['dark', 'fire'], cost: 240,
+                damage: 46, range: 125, attackSpeed: 0.9,
+                description: 'Dark Pokemon - Nasty Plot boost',
+                evolutionLine: [
+                    {dexId: 228, name: 'Houndour', level: 1, attack: 'Ember'},
+                    {dexId: 229, name: 'Houndoom', level: 24, attack: 'Foul Play'},
+                    {dexId: 229, name: 'Mega Houndoom', level: 50, attack: 'Inferno', mega: true}
+                ]
+            },
+            {
+                id: 24, dexId: 310, name: 'Manectric', types: ['electric'], cost: 230,
+                damage: 42, range: 135, attackSpeed: 1.0,
+                description: 'Discharge Pokemon - Chain lightning',
+                evolutionLine: [
+                    {dexId: 309, name: 'Electrike', level: 1, attack: 'Thunder Shock'},
+                    {dexId: 310, name: 'Manectric', level: 26, attack: 'Discharge'},
+                    {dexId: 310, name: 'Mega Manectric', level: 50, attack: 'Wild Charge', mega: true}
+                ]
+            },
+            {
+                id: 25, dexId: 354, name: 'Banette', types: ['ghost'], cost: 210, hasDetect: true,
+                damage: 44, range: 120, attackSpeed: 0.8,
+                description: 'Marionette Pokemon - Curse damage. Can detect invisible enemies.',
+                evolutionLine: [
+                    {dexId: 353, name: 'Shuppet', level: 1, attack: 'Night Shade'},
+                    {dexId: 354, name: 'Banette', level: 37, attack: 'Shadow Ball'},
+                    {dexId: 354, name: 'Mega Banette', level: 50, attack: 'Phantom Force', mega: true}
+                ]
+            },
+            {
+                id: 34, dexId: 475, name: 'Gallade', types: ['psychic', 'fighting'], cost: 270, hasDetect: true,
+                damage: 50, range: 75, attackSpeed: 2.2,
+                description: 'Blade Pokemon - Close Combat. Can detect invisible enemies.',
+                evolutionLine: [
+                    {dexId: 280, name: 'Ralts', level: 1, attack: 'Confusion'},
+                    {dexId: 281, name: 'Kirlia', level: 20, attack: 'Psycho Cut'},
+                    {dexId: 475, name: 'Gallade', level: 30, attack: 'Close Combat'},
+                    {dexId: 475, name: 'Mega Gallade', level: 50, attack: 'Close Combat', mega: true}
+                ]
+            },
+            {
+                id: 36, dexId: 302, name: 'Sableye', types: ['dark', 'ghost'], cost: 190, hasDetect: true,
+                damage: 35, range: 120, attackSpeed: 0.8,
+                description: 'Darkness Pokemon - Will-O-Wisp. Can detect invisible enemies.',
+                evolutionLine: [
+                    {dexId: 302, name: 'Sableye', level: 1, attack: 'Shadow Sneak'},
+                    {dexId: 302, name: 'Mega Sableye', level: 40, attack: 'Dark Pulse', mega: true}
+                ]
+            }
+        ];
+
+
+        // Enemy Pokemon
+        const enemyPokemon = [
+            {dexId: 19, name: 'Rattata', types: ['normal'], hp: 60, speed: 1.0, reward: 15},
+            {dexId: 16, name: 'Pidgey', types: ['normal', 'flying'], hp: 70, speed: 1.2, reward: 20},
+            {dexId: 74, name: 'Geodude', types: ['rock', 'ground'], hp: 90, speed: 0.8, reward: 25, defense: 0.3},
+            // Fast Electric Types
+            {dexId: 172, name: 'Pichu', types: ['electric'], hp: 50, speed: 1.8, reward: 20},
+            {dexId: 135, name: 'Jolteon', types: ['electric'], hp: 120, speed: 2.2, reward: 50},
+            // Invisible Ghost Type
+            {dexId: 92, name: 'Gastly', types: ['ghost', 'poison'], hp: 80, speed: 1.3, reward: 35, isInvisible: true},
+            {dexId: 143, name: 'Snorlax', types: ['normal'], hp: 300, speed: 0.4, reward: 90}
+        ];
+
+        // Boss Pokemon (appear every 10 waves)
+        const bossPokemon = [
+            // Regular Bosses
+            {dexId: 130, name: 'Gyarados', types: ['water', 'flying'], hp: 1000, speed: 0.7, reward: 500, isBoss: true},
+            {dexId: 149, name: 'Dragonite', types: ['dragon', 'flying'], hp: 1500, speed: 0.8, reward: 750, isBoss: true},
+            // Legendary Bosses (every 5 waves)
+            {dexId: 249, name: 'Lugia', types: ['psychic', 'flying'], hp: 2500, speed: 0.9, reward: 1200, isBoss: true, defense: 0.25},
+            {dexId: 250, name: 'Ho-Oh', types: ['fire', 'flying'], hp: 2500, speed: 0.9, reward: 1200, isBoss: true, defense: 0.25},
+            // High Defense Bosses
+            {dexId: 112, name: 'Rhydon', types: ['rock', 'ground'], hp: 1800, speed: 0.5, reward: 800, isBoss: true, defense: 0.7},
+            {dexId: 208, name: 'Steelix', types: ['steel', 'ground'], hp: 2200, speed: 0.4, reward: 1000, isBoss: true, defense: 0.8},
+            // Final Bosses
+            {dexId: 384, name: 'Rayquaza', types: ['dragon', 'flying'], hp: 3000, speed: 0.9, reward: 1500, isBoss: true},
+            {dexId: 493, name: 'Arceus', types: ['normal'], hp: 5000, speed: 0.5, reward: 2500, isBoss: true}
+        ];
+
+        // Pokemon-specific attack animations
+        class AttackAnimation {
+            constructor(tower, target, attackName) {
+                this.tower = tower;
+                this.target = target;
+                this.attackName = attackName;
+                this.frame = 0;
+                this.maxFrames = 40; // Extended for more epic animations
+                this.particles = [];
+                this.hitEnemies = new Set();
+            }
+
+            update() {
+                this.frame++;
+                
+                switch(this.attackName) {
+                    // NEW & MODIFIED ANIMATIONS
+                    case 'Psyshock':
+                        this.updateEpicPsychic();
+                        break;
+                    case 'Focus Blast':
+                        this.updateMegaAuraSphere();
+                        break;
+                    case 'Close Combat':
+                        this.updateFlurryOfPunches();
+                        break;
+                    case 'Dark Void':
+                    case 'Nightmare':
+                        this.updateDarkVoid();
+                        break;
+                    
+                    // EXISTING ANIMATIONS
+                    case 'Flamethrower': case 'Blast Burn': case 'Inferno': this.updateFlamethrower(); break;
+                    case 'Hydro Pump': case 'Hydro Cannon': this.updateHydroPump(); break;
+                    case 'Solar Beam': case 'Frenzy Plant': this.updateSolarBeam(); break;
+                    case 'Vine Whip': this.updateVineWhip(); break;
+                    case 'Thunderbolt': case 'Thunder': case 'Discharge': case 'Zap Cannon': this.updateThunderbolt(); break;
+                    case 'Psystrike': case 'Psychic': case 'Future Sight': case 'Psybeam': this.updatePsychic(); break;
+                    case 'Dragon Claw': case 'Dragon Rush': this.updateDragonClaw(); break;
+                    case 'Earthquake': case 'Avalanche': case 'Stone Edge': this.updateEarthquake(); break;
+                    case 'Ice Beam': case 'Ice Fang': case 'Powder Snow': this.updateIceBeam(); break;
+                    case 'Hyper Beam': case 'Dragon Ascent': case 'Draco Meteor': this.updateHyperBeam(); break;
+                    case 'Water Shuriken': this.updateWaterShuriken(); break;
+                    case 'Aura Sphere': this.updateAuraSphere(); break;
+                    case 'Moonblast': case 'Dazzling Gleam': this.updateMoonblast(); break;
+                    case 'Bullet Punch': case 'Meteor Mash': this.updateBulletPunch(); break;
+                    case 'Body Slam': case 'Heavy Slam': this.updateBodySlam(); break;
+                    case 'Sludge Bomb': case 'Toxic Spikes': case 'Cross Poison': this.updatePoisonAttack(); break;
+                    case 'Shadow Ball': case 'Shadow Force': this.updateShadowBall(); break;
+                    case 'Will-O-Wisp': this.updateWillOWisp(); break;
+                    case 'Night Slash': this.updateNightSlash(); break;
+                    default:
+                        this.updateGenericProjectile();
+                }
+                
+                return this.frame >= this.maxFrames;
+            }
+
+            // --- NEW & MODIFIED ANIMATION LOGIC ---
+
+            updateEpicPsychic() { // For Mega Mewtwo Y
+                const centerX = this.target.x;
+                const centerY = this.target.y;
+                
+                // Phase 1: Vortex forms
+                if (this.frame < 20) {
+                    for(let i = 0; i < 5; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const dist = (20 - this.frame) * 4 + Math.random() * 20;
+                        this.particles.push({
+                            x: centerX + Math.cos(angle) * dist,
+                            y: centerY + Math.sin(angle) * dist,
+                            vx: -Math.cos(angle) * 3,
+                            vy: -Math.sin(angle) * 3,
+                            size: 4 + Math.random() * 4,
+                            color: `rgba(${150 + Math.random()*100}, 50, 255, 0.8)`,
+                            life: 10
+                        });
+                    }
+                }
+                
+                // Phase 2: Implosion and Damage
+                if (this.frame === 20) {
+                    soundManager.playSound('psychic');
+                    // Huge shockwave
+                     for (let i = 0; i < 100; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        this.particles.push({
+                            x: centerX,
+                            y: centerY,
+                            vx: Math.cos(angle) * (4 + Math.random() * 4),
+                            vy: Math.sin(angle) * (4 + Math.random() * 4),
+                            size: 3 + Math.random() * 3,
+                            color: `rgba(255, 100, ${200 + Math.random()*55}, 1)`,
+                            life: 25
+                        });
+                    }
+                    // Damage enemies in a large radius
+                    gameState.enemies.forEach(enemy => {
+                        if (Math.hypot(enemy.x - centerX, enemy.y - centerY) <= 120) {
+                            this.damageEnemy(enemy);
+                            enemy.applyStatus('confuse', 120);
+                        }
+                    });
+                }
+            }
+
+            updateMegaAuraSphere() { // For Mega Mewtwo X
+                // Phase 1: Charge up
+                if (this.frame < 20) {
+                    for(let i = 0; i < 3; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const dist = (20 - this.frame) * 3;
+                        this.particles.push({
+                            x: this.tower.x + Math.cos(angle) * dist,
+                            y: this.tower.y + Math.sin(angle) * dist,
+                            vx: -Math.cos(angle) * 2,
+                            vy: -Math.sin(angle) * 2,
+                            size: 2 + Math.random() * 2,
+                            color: `rgba(100, 150, 255, 0.7)`,
+                            life: 15
+                        });
+                    }
+                }
+
+                // Phase 2: Launch giant projectile
+                if (this.frame === 20) {
+                    gameState.projectiles.push({
+                        x: this.tower.x, y: this.tower.y,
+                        vx: 0, vy: 0,
+                        damage: this.tower.pokemon.damage * this.tower.damageBonus * 2.0, // Extra damage
+                        target: this.target,
+                        tower: this.tower,
+                        type: 'mega-aura-sphere',
+                        size: 25, // Huge projectile
+                        life: 80,
+                        homing: true
+                    });
+                }
+            }
+            
+            updateFlurryOfPunches() { // For Fighting types
+                this.maxFrames = 20; // A very quick animation
+                if (!this.target || this.target.hp <= 0) return;
+
+                // Create rapid punch impacts on the target
+                if (this.frame % 3 === 0 && this.frame < 15) {
+                    const hitCount = 4;
+                    for (let i = 0; i < hitCount; i++) {
+                        // Damage is divided by the number of hits
+                        this.damageEnemy(this.target, 1 / hitCount);
+                         this.particles.push({
+                            x: this.target.x + (Math.random() - 0.5) * 20,
+                            y: this.target.y + (Math.random() - 0.5) * 20,
+                            size: 10 + Math.random() * 5,
+                            color: `rgba(255, 255, 255, 0.8)`,
+                            life: 5
+                        });
+                    }
+                }
+            }
+
+            updateDarkVoid() { // For Gengar
+                this.maxFrames = 30;
+                const centerX = this.target.x;
+                const centerY = this.target.y;
+
+                if (this.frame === 15) {
+                    // Create dark cloud
+                    for (let i = 0; i < 30; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const dist = Math.random() * 80;
+                        this.particles.push({
+                            x: centerX + Math.cos(angle) * dist,
+                            y: centerY + Math.sin(angle) * dist,
+                            size: 15 + Math.random() * 10,
+                            color: `rgba(80, 40, 120, ${0.5 - dist/180})`,
+                            life: 40
+                        });
+                    }
+                    // Damage and attempt to sleep enemies
+                    gameState.enemies.forEach(enemy => {
+                        if (Math.hypot(enemy.x - centerX, enemy.y - centerY) <= 80) {
+                            this.damageEnemy(enemy);
+                            if (Math.random() < 0.5) { // 50% chance to sleep
+                                enemy.applyStatus('sleep', 180);
+                            }
+                        }
+                    });
+                }
+            }
+
+            // --- END NEW ANIMATIONS ---
+
+            updateFlamethrower() {
+                const angle = Math.atan2(this.target.y - this.tower.y, this.target.x - this.tower.x);
+                const spread = Math.PI / 4;
+                
+                if (this.frame < 20) {
+                    for (let i = 0; i < 4; i++) {
+                        const particleAngle = angle + (Math.random() - 0.5) * spread;
+                        const distance = this.frame * 8 + Math.random() * 20;
+                        const size = 15 - this.frame * 0.3;
+                        
+                        this.particles.push({
+                            x: this.tower.x + Math.cos(particleAngle) * distance,
+                            y: this.tower.y + Math.sin(particleAngle) * distance,
+                            size: size,
+                            color: `rgba(255, ${100 + Math.random() * 100}, 0, ${1 - this.frame / 30})`,
+                            life: 15
+                        });
+                    }
+                }
+                
+                if (this.frame === 15) {
+                    gameState.enemies.forEach(enemy => {
+                        const dist = Math.hypot(enemy.x - this.tower.x, enemy.y - this.tower.y);
+                        if (dist <= 150) {
+                            const enemyAngle = Math.atan2(enemy.y - this.tower.y, enemy.x - this.tower.x);
+                            const angleDiff = Math.abs(this.normalizeAngle(enemyAngle - angle));
+                            
+                            if (angleDiff <= spread / 2) {
+                                this.damageEnemy(enemy);
+                                enemy.applyStatus('burn', 90);
+                            }
+                        }
+                    });
+                }
+            }
+
+            updateHydroPump() {
+                const angle = Math.atan2(this.target.y - this.tower.y, this.target.x - this.tower.x);
+                
+                if (this.frame < 25) {
+                    for (let cannon = -1; cannon <= 1; cannon += 2) {
+                        const offsetAngle = angle + cannon * 0.1;
+                        const distance = this.frame * 10;
+                        
+                        for (let i = 0; i < 3; i++) {
+                            this.particles.push({
+                                x: this.tower.x + Math.cos(offsetAngle) * distance + (Math.random() - 0.5) * 10,
+                                y: this.tower.y + Math.sin(offsetAngle) * distance + (Math.random() - 0.5) * 10,
+                                size: 12,
+                                color: `rgba(104, 144, 240, ${1 - this.frame / 40})`,
+                                life: 10
+                            });
+                        }
+                    }
+                }
+                
+                if (this.frame === 12) {
+                    const endX = this.tower.x + Math.cos(angle) * 180;
+                    const endY = this.tower.y + Math.sin(angle) * 180;
+                    
+                    gameState.enemies.forEach(enemy => {
+                        const dist = this.distanceToLine(enemy.x, enemy.y, this.tower.x, this.tower.y, endX, endY);
+                        if (dist <= 20) {
+                            this.damageEnemy(enemy);
+                            enemy.x += Math.cos(angle) * 10;
+                            enemy.y += Math.sin(angle) * 10;
+                        }
+                    });
+                }
+            }
+
+            updateSolarBeam() {
+                if (this.frame < 15) {
+                    for (let i = 0; i < 2; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const distance = 50 - this.frame * 2;
+                        
+                        this.particles.push({
+                            x: this.tower.x + Math.cos(angle) * distance,
+                            y: this.tower.y + Math.sin(angle) * distance,
+                            size: 6,
+                            color: `rgba(${100 + Math.random() * 100}, 255, 100, ${0.8})`,
+                            life: 20,
+                            vx: -Math.cos(angle) * 2,
+                            vy: -Math.sin(angle) * 2
+                        });
+                    }
+                } else {
+                    const angle = Math.atan2(this.target.y - this.tower.y, this.target.x - this.tower.x);
+                    const beamLength = 200;
+                    
+                    for (let d = 0; d < beamLength; d += 10) {
+                        this.particles.push({
+                            x: this.tower.x + Math.cos(angle) * d,
+                            y: this.tower.y + Math.sin(angle) * d,
+                            size: 20 - d / 20,
+                            color: `rgba(150, 255, 150, ${1 - (this.frame - 15) / 15})`,
+                            life: 5
+                        });
+                    }
+                    
+                    if (this.frame === 20) {
+                        const endX = this.tower.x + Math.cos(angle) * beamLength;
+                        const endY = this.tower.y + Math.sin(angle) * beamLength;
+                        
+                        gameState.enemies.forEach(enemy => {
+                            const dist = this.distanceToLine(enemy.x, enemy.y, this.tower.x, this.tower.y, endX, endY);
+                            if (dist <= 25) {
+                                this.damageEnemy(enemy);
+                            }
+                        });
+                    }
+                }
+            }
+
+            updateVineWhip() {
+                const angle = Math.atan2(this.target.y - this.tower.y, this.target.x - this.tower.x);
+                
+                for (let vine = -1; vine <= 1; vine += 2) {
+                    const vineAngle = angle + vine * 0.2 + Math.sin(this.frame * 0.3) * 0.2;
+                    const distance = Math.min(this.frame * 8, 120);
+                    
+                    this.particles.push({
+                        x: this.tower.x + Math.cos(vineAngle) * distance,
+                        y: this.tower.y + Math.sin(vineAngle) * distance,
+                        size: 8,
+                        color: `rgba(50, 200, 50, ${1 - this.frame / 40})`,
+                        life: 10
+                    });
+                }
+                
+                if (this.frame === 15 && this.target) {
+                    this.damageEnemy(this.target);
+                    this.target.applyStatus('slow', 60);
+                }
+            }
+
+            updateThunderbolt() {
+                if (this.frame === 10) {
+                    const points = this.generateLightningPath(this.tower.x, this.tower.y, this.target.x, this.target.y);
+                    
+                    points.forEach((point, i) => {
+                        if (i > 0) {
+                            for (let j = 0; j < 3; j++) {
+                                this.particles.push({
+                                    x: point.x + (Math.random() - 0.5) * 10,
+                                    y: point.y + (Math.random() - 0.5) * 10,
+                                    size: 8,
+                                    color: `rgba(255, 255, 0, ${1 - j * 0.2})`,
+                                    life: 15 - j * 3
+                                });
+                            }
+                        }
+                    });
+                    
+                    this.damageEnemy(this.target);
+                    this.target.applyStatus('paralyze', 60);
+                    
+                    let chainTarget = this.target;
+                    for (let chain = 0; chain < 2; chain++) {
+                        let nextTarget = null;
+                        let minDist = 100;
+                        
+                        gameState.enemies.forEach(enemy => {
+                            if (enemy !== chainTarget && !this.hitEnemies.has(enemy)) {
+                                const dist = Math.hypot(enemy.x - chainTarget.x, enemy.y - chainTarget.y);
+                                if (dist < minDist) {
+                                    minDist = dist;
+                                    nextTarget = enemy;
+                                }
+                            }
+                        });
+                        
+                        if (nextTarget) {
+                            this.damageEnemy(nextTarget);
+                            nextTarget.applyStatus('paralyze', 30);
+                            chainTarget = nextTarget;
+                        }
+                    }
+                }
+            }
+
+            updatePsychic() {
+                const centerX = this.target ? this.target.x : this.tower.x;
+                const centerY = this.target ? this.target.y : this.tower.y;
+                
+                const radius = this.frame * 6;
+                const particleCount = 16;
+                
+                for (let i = 0; i < particleCount; i++) {
+                    const angle = (Math.PI * 2 * i) / particleCount;
+                    
+                    this.particles.push({
+                        x: centerX + Math.cos(angle) * radius,
+                        y: centerY + Math.sin(angle) * radius,
+                        size: 10,
+                        color: `rgba(${150 + Math.random() * 50}, 100, ${200 + Math.random() * 55}, ${1 - this.frame / 40})`,
+                        life: 10
+                    });
+                }
+                
+                if (this.frame === 15) {
+                    gameState.enemies.forEach(enemy => {
+                        const dist = Math.hypot(enemy.x - centerX, enemy.y - centerY);
+                        if (dist <= 100) {
+                            this.damageEnemy(enemy);
+                            enemy.applyStatus('confuse', 45);
+                        }
+                    });
+                }
+            }
+
+            updateDragonClaw() {
+                const angle = Math.atan2(this.target.y - this.tower.y, this.target.x - this.tower.x);
+                
+                if (this.frame === 10) {
+                    for (let claw = -1; claw <= 1; claw++) {
+                        const clawAngle = angle + claw * 0.3;
+                        const distance = 100;
+                        
+                        for (let d = 0; d < distance; d += 5) {
+                            this.particles.push({
+                                x: this.tower.x + Math.cos(clawAngle) * d,
+                                y: this.tower.y + Math.sin(clawAngle) * d,
+                                size: 12 - d / 15,
+                                color: `rgba(${200 + Math.random() * 55}, 50, ${100 + Math.random() * 100}, ${1 - d / distance})`,
+                                life: 20
+                            });
+                        }
+                        
+                        gameState.enemies.forEach(enemy => {
+                            const endX = this.tower.x + Math.cos(clawAngle) * distance;
+                            const endY = this.tower.y + Math.sin(clawAngle) * distance;
+                            const dist = this.distanceToLine(enemy.x, enemy.y, this.tower.x, this.tower.y, endX, endY);
+                            
+                            if (dist <= 15) {
+                                this.damageEnemy(enemy);
+                            }
+                        });
+                    }
+                }
+            }
+
+            updateGenericProjectile() {
+                if (this.frame === 1) {
+                    const angle = Math.atan2(this.target.y - this.tower.y, this.target.x - this.tower.x);
+                    const speed = 15; // Increased projectile speed
+                    
+                    gameState.projectiles.push({
+                        x: this.tower.x,
+                        y: this.tower.y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        damage: this.tower.pokemon.damage * this.tower.damageBonus,
+                        target: this.target,
+                        tower: this.tower,
+                        type: 'normal',
+                        size: 6,
+                        life: 60
+                    });
+                }
+            }
+
+            updateEarthquake() {
+                if (this.frame === 15) {
+                    const radius = 150;
+                    soundManager.playSound('earthquake');
+                    for (let crack = 0; crack < 8; crack++) {
+                        const crackAngle = (Math.PI * 2 * crack) / 8;
+                        for (let d = 0; d < radius; d += 5) {
+                            this.particles.push({
+                                x: this.tower.x + Math.cos(crackAngle) * d,
+                                y: this.tower.y + Math.sin(crackAngle) * d,
+                                size: 3,
+                                color: `rgba(139, 69, 19, ${1 - d / radius})`,
+                                life: 30
+                            });
+                        }
+                    }
+                    gameState.enemies.forEach(enemy => {
+                        if (Math.hypot(enemy.x - this.tower.x, enemy.y - this.tower.y) <= radius) {
+                            this.damageEnemy(enemy);
+                            enemy.applyStatus('stun', 30);
+                        }
+                    });
+                }
+            }
+
+            updateIceBeam() {
+                const angle = Math.atan2(this.target.y - this.tower.y, this.target.x - this.tower.x);
+                if (this.frame === 12) {
+                    const endX = this.tower.x + Math.cos(angle) * 160;
+                    const endY = this.tower.y + Math.sin(angle) * 160;
+                    gameState.enemies.forEach(enemy => {
+                        if (this.distanceToLine(enemy.x, enemy.y, this.tower.x, this.tower.y, endX, endY) <= 25) {
+                            this.damageEnemy(enemy);
+                            enemy.applyStatus('freeze', 90);
+                        }
+                    });
+                }
+            }
+
+            updateHyperBeam() {
+                if (this.frame === 15) {
+                    const angle = Math.atan2(this.target.y - this.tower.y, this.target.x - this.tower.x);
+                    const endX = this.tower.x + Math.cos(angle) * 300;
+                    const endY = this.tower.y + Math.sin(angle) * 300;
+                    gameState.enemies.forEach(enemy => {
+                        if (this.distanceToLine(enemy.x, enemy.y, this.tower.x, this.tower.y, endX, endY) <= 30) {
+                            this.damageEnemy(enemy);
+                        }
+                    });
+                }
+            }
+
+            updateWaterShuriken() {
+                if (this.frame % 5 === 0 && this.frame < 20) {
+                    const angle = Math.atan2(this.target.y - this.tower.y, this.target.x - this.tower.x);
+                    gameState.projectiles.push({
+                        x: this.tower.x, y: this.tower.y,
+                        vx: Math.cos(angle) * 12, vy: Math.sin(angle) * 12,
+                        damage: this.tower.pokemon.damage * this.tower.damageBonus * 0.4,
+                        target: this.target, tower: this.tower, type: 'water-shuriken',
+                        size: 8, life: 50
+                    });
+                }
+            }
+
+            updateAuraSphere() {
+                if (this.frame === 10) {
+                    gameState.projectiles.push({
+                        x: this.tower.x, y: this.tower.y, vx: 0, vy: 0,
+                        damage: this.tower.pokemon.damage * this.tower.damageBonus * 1.5,
+                        target: this.target, tower: this.tower, type: 'aura-sphere',
+                        size: 12, life: 80, homing: true
+                    });
+                }
+            }
+            
+            updateMoonblast() {
+                 if (this.frame === 15) {
+                    const centerX = this.target.x, centerY = this.target.y;
+                    gameState.enemies.forEach(enemy => {
+                        if (Math.hypot(enemy.x - centerX, enemy.y - centerY) <= 80) {
+                            this.damageEnemy(enemy);
+                        }
+                    });
+                 }
+            }
+            
+            updateBulletPunch() {
+                if (this.frame === 5 && this.target) this.damageEnemy(this.target);
+            }
+            
+            updateBodySlam() {
+                if (this.frame === 12) {
+                    gameState.enemies.forEach(enemy => {
+                         if (Math.hypot(enemy.x - this.tower.x, enemy.y - this.tower.y) <= 100) {
+                            this.damageEnemy(enemy);
+                         }
+                    });
+                }
+            }
+            
+            updatePoisonAttack() {
+                if (this.frame === 10) {
+                    const centerX = this.target.x, centerY = this.target.y;
+                     gameState.enemies.forEach(enemy => {
+                        if (Math.hypot(enemy.x - centerX, enemy.y - centerY) <= 60) {
+                            this.damageEnemy(enemy);
+                            enemy.applyStatus('poison', 150);
+                        }
+                    });
+                }
+            }
+            
+            updateShadowBall() {
+                if (this.frame === 8) {
+                    const angle = Math.atan2(this.target.y - this.tower.y, this.target.x - this.tower.x);
+                    gameState.projectiles.push({
+                        x: this.tower.x, y: this.tower.y,
+                        vx: Math.cos(angle) * 10, vy: Math.sin(angle) * 10,
+                        damage: this.tower.pokemon.damage * this.tower.damageBonus * 1.2,
+                        target: this.target, tower: this.tower, type: 'shadow',
+                        size: 10, life: 70
+                    });
+                }
+            }
+            
+            updateWillOWisp() {
+                if (this.frame % 8 === 0 && this.frame < 24) {
+                     const angle = Math.atan2(this.target.y - this.tower.y, this.target.x - this.tower.x);
+                     gameState.projectiles.push({
+                        x: this.tower.x, y: this.tower.y,
+                        vx: Math.cos(angle) * 5, vy: Math.sin(angle) * 5,
+                        damage: this.tower.pokemon.damage * this.tower.damageBonus * 0.5,
+                        target: this.target, tower: this.tower, type: 'will-o-wisp',
+                        size: 8, life: 100, homing: true, burnChance: true
+                    });
+                }
+            }
+            
+            updateNightSlash() {
+                if (this.frame === 8) {
+                    const angle = Math.atan2(this.target.y - this.tower.y, this.target.x - this.tower.x);
+                    const endX = this.tower.x + Math.cos(angle) * 120;
+                    const endY = this.tower.y + Math.sin(angle) * 120;
+                    gameState.enemies.forEach(enemy => {
+                        if (this.distanceToLine(enemy.x, enemy.y, this.tower.x, this.tower.y, endX, endY) <= 20) {
+                            this.damageEnemy(enemy);
+                        }
+                    });
+                }
+            }
+
+
+            generateLightningPath(x1, y1, x2, y2) {
+                const points = [{x: x1, y: y1}];
+                const segments = 5;
+                
+                for (let i = 1; i < segments; i++) {
+                    const t = i / segments;
+                    const x = x1 + (x2 - x1) * t + (Math.random() - 0.5) * 30;
+                    const y = y1 + (y2 - y1) * t + (Math.random() - 0.5) * 30;
+                    points.push({x, y});
+                }
+                points.push({x: x2, y: y2});
+                return points;
+            }
+
+            distanceToLine(px, py, x1, y1, x2, y2) {
+                const A = px - x1;
+                const B = py - y1;
+                const C = x2 - x1;
+                const D = y2 - y1;
+                const dot = A * C + B * D;
+                const lenSq = C * C + D * D;
+                let param = -1;
+                
+                if (lenSq !== 0) param = dot / lenSq;
+                
+                let xx, yy;
+                if (param < 0) {
+                    xx = x1;
+                    yy = y1;
+                } else if (param > 1) {
+                    xx = x2;
+                    yy = y2;
+                } else {
+                    xx = x1 + param * C;
+                    yy = y1 + param * D;
+                }
+                
+                const dx = px - xx;
+                const dy = py - yy;
+                return Math.sqrt(dx * dx + dy * dy);
+            }
+
+            normalizeAngle(angle) {
+                while (angle > Math.PI) angle -= 2 * Math.PI;
+                while (angle < -Math.PI) angle += 2 * Math.PI;
+                return angle;
+            }
+
+            damageEnemy(enemy, damageMultiplier = 1) {
+                if (!this.hitEnemies.has(enemy) && enemy.hp > 0) {
+                    if (damageMultiplier === 1) this.hitEnemies.add(enemy);
+
+                    const damage = this.tower.pokemon.damage * this.tower.damageBonus * (1 + this.tower.level * 0.1) * damageMultiplier;
+                    const effectiveness = this.tower.calculateTypeEffectiveness(enemy.types);
+                    enemy.takeDamage(damage, effectiveness, this.tower);
+                    
+                    if (damageMultiplier === 1) {
+                        if (this.attackName.includes('Thunder')) soundManager.playSound('thunder');
+                        else if (this.attackName.includes('Psychic')) soundManager.playSound('psychic');
+                        else soundManager.playSound('hit');
+                    }
+                }
+            }
+
+            draw(ctx) {
+                this.particles = this.particles.filter(p => {
+                    p.life--;
+                    if (p.vx) p.x += p.vx;
+                    if (p.vy) p.y += p.vy;
+                    if (p.vx) p.vx *= 0.95;
+                    if (p.vy) p.vy *= 0.95;
+                    
+                    if (p.life > 0) {
+                        ctx.save();
+                        ctx.globalAlpha = p.life / 20;
+                        ctx.fillStyle = p.color;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.restore();
+                        return true;
+                    }
+                    return false;
+                });
+            }
+        }
+
+        // Tower class
+        class Tower {
+            constructor(x, y, pokemon) {
+                this.id = gameState.towerIdCounter++;
+                this.x = x;
+                this.y = y;
+                this.pokemon = {...pokemon};
+                this.level = 1;
+                this.exp = 0;
+                this.expToNext = 50;
+                this.evolutionStage = 0;
+                this.isMegaEvolved = false;
+                this.megaForm = 0;
+                this.lastAttack = Date.now();
+                this.rotation = 0;
+                this.kills = 0;
+                this.sprite = new Image();
+                this.updateSprite();
+                this.damageBonus = 1;
+                this.rangeBonus = 1;
+                this.speedBonus = 1;
+                this.damageUpgrades = 0;
+                this.rangeUpgrades = 0;
+                this.speedUpgrades = 0;
+                this.isAttacking = false;
+                this.attackFrame = 0;
+                this.totalDamageDealt = 0;
+            }
+
+            updateSprite() {
+                const currentEvolution = this.getCurrentEvolution();
+                
+                // Check if it's a mega evolution and use special sprite
+                if (currentEvolution.mega && MEGA_SPRITE_MAP[currentEvolution.name]) {
+                    this.sprite.src = MEGA_SPRITE_MAP[currentEvolution.name];
+                } else {
+                    this.sprite.src = SPRITE_URL + currentEvolution.dexId + '.png';
+                }
+                
+                this.currentDexId = currentEvolution.dexId;
+                this.currentName = currentEvolution.name;
+                this.currentAttack = currentEvolution.attack;
+                this.pokemon.hasDetect = currentEvolution.hasDetect || this.pokemon.hasDetect;
+                
+                if (currentEvolution.types) {
+                    this.pokemon.types = currentEvolution.types;
+                }
+            }
+
+            getCurrentEvolution() {
+                if (this.isMegaEvolved) {
+                    const megaEvolutions = this.pokemon.evolutionLine.filter(e => e.mega);
+                    if (megaEvolutions.length > 0) {
+                        return megaEvolutions[this.megaForm % megaEvolutions.length];
+                    }
+                }
+                return this.pokemon.evolutionLine[this.evolutionStage];
+            }
+
+            update(enemies, deltaTime = 1) {
+                const now = Date.now();
+                const attackInterval = 1000 / (this.pokemon.attackSpeed * this.speedBonus * gameState.gameSpeed);
+                
+                if (now - this.lastAttack >= attackInterval) {
+                    const target = this.findTarget(enemies);
+                    if (target) {
+                        this.rotation = Math.atan2(target.y - this.y, target.x - this.x);
+                        this.attack(target);
+                        this.lastAttack = now;
+                        this.isAttacking = true;
+                        this.attackFrame = 0;
+                    }
+                }
+                
+                if (this.isAttacking) {
+                    this.attackFrame++;
+                    if (this.attackFrame > 30) {
+                        this.isAttacking = false;
+                        this.attackFrame = 0;
+                    }
+                }
+            }
+
+            findTarget(enemies) {
+                const range = this.pokemon.range * this.rangeBonus;
+                let bestTarget = null;
+                let bestScore = -Infinity;
+                
+                for (const enemy of enemies) {
+                    // NEW: Check for invisibility
+                    if (enemy.pokemon.isInvisible && !this.pokemon.hasDetect) {
+                        continue; // Can't see it, skip
+                    }
+
+                    const dist = Math.hypot(enemy.x - this.x, enemy.y - this.y);
+                    if (dist <= range) {
+                        const effectiveness = this.calculateTypeEffectiveness(enemy.types);
+                        const score = effectiveness * 100 - dist + enemy.progress * 50 + (enemy.isBoss ? 200 : 0);
+                        
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestTarget = enemy;
+                        }
+                    }
+                }
+                
+                return bestTarget;
+            }
+
+            calculateTypeEffectiveness(enemyTypes) {
+                let multiplier = 1;
+                
+                for (const myType of this.pokemon.types) {
+                    for (const enemyType of enemyTypes) {
+                        // Super effective matchups (2x damage)
+                        if (myType === 'fire' && (enemyType === 'grass' || enemyType === 'ice' || enemyType === 'bug' || enemyType === 'steel')) multiplier *= 2;
+                        if (myType === 'water' && (enemyType === 'fire' || enemyType === 'ground' || enemyType === 'rock')) multiplier *= 2;
+                        if (myType === 'grass' && (enemyType === 'water' || enemyType === 'ground' || enemyType === 'rock')) multiplier *= 2;
+                        if (myType === 'electric' && (enemyType === 'water' || enemyType === 'flying')) multiplier *= 2;
+                        if (myType === 'psychic' && (enemyType === 'fighting' || enemyType === 'poison')) multiplier *= 2;
+                        if (myType === 'ice' && (enemyType === 'grass' || enemyType === 'ground' || enemyType === 'flying' || enemyType === 'dragon')) multiplier *= 2;
+                        if (myType === 'dragon' && enemyType === 'dragon') multiplier *= 2;
+                        if (myType === 'dark' && (enemyType === 'psychic' || enemyType === 'ghost')) multiplier *= 2;
+                        if (myType === 'fighting' && (enemyType === 'normal' || enemyType === 'ice' || enemyType === 'rock' || enemyType === 'dark' || enemyType === 'steel')) multiplier *= 2;
+                        if (myType === 'poison' && (enemyType === 'grass' || enemyType === 'fairy')) multiplier *= 2;
+                        if (myType === 'ground' && (enemyType === 'fire' || enemyType === 'electric' || enemyType === 'poison' || enemyType === 'rock' || enemyType === 'steel')) multiplier *= 2;
+                        if (myType === 'flying' && (enemyType === 'grass' || enemyType === 'fighting' || enemyType === 'bug')) multiplier *= 2;
+                        if (myType === 'rock' && (enemyType === 'fire' || enemyType === 'ice' || enemyType === 'flying' || enemyType === 'bug')) multiplier *= 2;
+                        if (myType === 'bug' && (enemyType === 'grass' || enemyType === 'psychic' || enemyType === 'dark')) multiplier *= 2;
+                        if (myType === 'ghost' && (enemyType === 'psychic' || enemyType === 'ghost')) multiplier *= 2;
+                        if (myType === 'steel' && (enemyType === 'ice' || enemyType === 'rock' || enemyType === 'fairy')) multiplier *= 2;
+                        if (myType === 'fairy' && (enemyType === 'fighting' || enemyType === 'dragon' || enemyType === 'dark')) multiplier *= 2;
+                        
+                        // Not very effective matchups (0.5x damage)
+                        if (myType === 'fire' && (enemyType === 'water' || enemyType === 'fire' || enemyType === 'rock' || enemyType === 'dragon')) multiplier *= 0.5;
+                        if (myType === 'water' && (enemyType === 'water' || enemyType === 'grass' || enemyType === 'dragon')) multiplier *= 0.5;
+                        if (myType === 'grass' && (enemyType === 'fire' || enemyType === 'grass' || enemyType === 'poison' || enemyType === 'flying' || enemyType === 'bug' || enemyType === 'dragon' || enemyType === 'steel')) multiplier *= 0.5;
+                        if (myType === 'electric' && (enemyType === 'electric' || enemyType === 'grass' || enemyType === 'dragon')) multiplier *= 0.5;
+                        if (myType === 'psychic' && (enemyType === 'psychic' || enemyType === 'steel')) multiplier *= 0.5;
+                        if (myType === 'ice' && (enemyType === 'fire' || enemyType === 'water' || enemyType === 'ice' || enemyType === 'steel')) multiplier *= 0.5;
+                        if (myType === 'dragon' && enemyType === 'steel') multiplier *= 0.5;
+                        if (myType === 'dark' && (enemyType === 'fighting' || enemyType === 'dark' || enemyType === 'fairy')) multiplier *= 0.5;
+                        if (myType === 'fighting' && (enemyType === 'poison' || enemyType === 'flying' || enemyType === 'psychic' || enemyType === 'bug' || enemyType === 'fairy')) multiplier *= 0.5;
+                        if (myType === 'poison' && (enemyType === 'poison' || enemyType === 'ground' || enemyType === 'rock' || enemyType === 'ghost')) multiplier *= 0.5;
+                        if (myType === 'ground' && (enemyType === 'grass' || enemyType === 'bug')) multiplier *= 0.5;
+                        if (myType === 'flying' && (enemyType === 'electric' || enemyType === 'rock' || enemyType === 'steel')) multiplier *= 0.5;
+                        if (myType === 'rock' && (enemyType === 'fighting' || enemyType === 'ground' || enemyType === 'steel')) multiplier *= 0.5;
+                        if (myType === 'bug' && (enemyType === 'fire' || enemyType === 'fighting' || enemyType === 'poison' || enemyType === 'flying' || enemyType === 'ghost' || enemyType === 'steel' || enemyType === 'fairy')) multiplier *= 0.5;
+                        if (myType === 'ghost' && (enemyType === 'dark' || enemyType === 'normal')) multiplier *= 0.5;
+                        if (myType === 'steel' && (enemyType === 'fire' || enemyType === 'water' || enemyType === 'electric' || enemyType === 'steel')) multiplier *= 0.5;
+                        if (myType === 'fairy' && (enemyType === 'fire' || enemyType === 'poison' || enemyType === 'steel')) multiplier *= 0.5;
+                        
+                        // No effect matchups (0x damage)
+                        if (myType === 'normal' && enemyType === 'ghost') multiplier *= 0;
+                        if (myType === 'electric' && enemyType === 'ground') multiplier *= 0;
+                        if (myType === 'fighting' && enemyType === 'ghost') multiplier *= 0;
+                        if (myType === 'poison' && enemyType === 'steel') multiplier *= 0;
+                        if (myType === 'ground' && enemyType === 'flying') multiplier *= 0;
+                        if (myType === 'psychic' && enemyType === 'dark') multiplier *= 0;
+                        if (myType === 'ghost' && enemyType === 'normal') multiplier *= 0;
+                    }
+                }
+                
+                return Math.max(multiplier, 0.25); // Minimum 0.25x damage
+            }
+
+            attack(target) {
+                const animation = new AttackAnimation(this, target, this.currentAttack);
+                gameState.activeAnimations.push(animation);
+                soundManager.playSound('shoot');
+            }
+
+            gainExp(amount) {
+                this.exp += amount * 1.5;
+                
+                while (this.exp >= this.expToNext) {
+                    this.levelUp();
+                }
+            }
+
+            levelUp() {
+                this.level++;
+                this.exp -= this.expToNext;
+                this.expToNext = Math.floor(this.expToNext * 1.2);
+                
+                soundManager.playSound('levelUp');
+                
+                // Special handling for Eevee - don't auto-evolve
+                if (this.currentName === 'Eevee') {
+                    // Eevee requires manual evolution choice
+                } else if (!this.isMegaEvolved) {
+                    const nextEvo = this.pokemon.evolutionLine[this.evolutionStage + 1];
+                    if (nextEvo && !nextEvo.mega && this.level >= nextEvo.level) {
+                        this.evolve();
+                    }
+                }
+                
+                for (let i = 0; i < 10; i++) {
+                    gameState.particles.push({
+                        x: this.x + (Math.random() - 0.5) * 30,
+                        y: this.y + (Math.random() - 0.5) * 30,
+                        vx: 0,
+                        vy: -2,
+                        life: 30,
+                        color: '#4CAF50',
+                        size: 3
+                    });
+                }
+            }
+
+            evolve() {
+                if (this.evolutionStage < this.pokemon.evolutionLine.length - 1) {
+                    const nextEvo = this.pokemon.evolutionLine[this.evolutionStage + 1];
+                    if (!nextEvo.mega) {
+                        this.evolutionStage++;
+                        this.updateSprite();
+                        
+                        soundManager.playSound('evolve');
+                        
+                        for (let i = 0; i < 20; i++) {
+                            const angle = (Math.PI * 2 * i) / 20;
+                            gameState.particles.push({
+                                x: this.x,
+                                y: this.y,
+                                vx: Math.cos(angle) * 4,
+                                vy: Math.sin(angle) * 4,
+                                life: 40,
+                                color: '#FFD700',
+                                size: 4
+                            });
+                        }
+                        
+                        this.pokemon.damage *= 1.4;
+                        this.pokemon.range *= 1.15;
+                        this.pokemon.attackSpeed *= 1.1;
+                    }
+                }
+            }
+
+            megaEvolve(formIndex = 0) {
+                const megaEvolutions = this.pokemon.evolutionLine.filter(e => e.mega);
+                if (megaEvolutions.length > 0 && !this.isMegaEvolved) {
+                    this.isMegaEvolved = true;
+                    this.megaForm = formIndex;
+                    this.updateSprite();
+                    
+                    soundManager.playSound('megaEvolve');
+                    
+                    const colors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082', '#9400D3'];
+                    for (let i = 0; i < 40; i++) {
+                        const angle = (Math.PI * 2 * i) / 40;
+                        gameState.particles.push({
+                            x: this.x,
+                            y: this.y,
+                            vx: Math.cos(angle) * 6,
+                            vy: Math.sin(angle) * 6,
+                            life: 60,
+                            color: colors[i % colors.length],
+                            size: 6
+                        });
+                    }
+                    
+                    this.pokemon.damage *= 1.8;
+                    this.pokemon.range *= 1.4;
+                    this.pokemon.attackSpeed *= 1.25;
+                }
+            }
+
+            draw(ctx) {
+                ctx.save();
+                
+                if (gameState.selectedTower === this) {
+                    ctx.strokeStyle = 'rgba(255, 215, 0, 0.3)';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([5, 5]);
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.pokemon.range * this.rangeBonus, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+                
+                if (this.sprite.complete) {
+                    const size = this.isMegaEvolved ? 72 : 64;
+                    
+                    if (this.isAttacking) {
+                        ctx.translate(this.x, this.y);
+                        ctx.rotate(Math.sin(this.attackFrame * 0.3) * 0.1);
+                        ctx.translate(-this.x, -this.y);
+                    }
+                    
+                    ctx.drawImage(this.sprite, this.x - size/2, this.y - size/2, size, size);
+                }
+                
+                if (this.isMegaEvolved) {
+                    ctx.strokeStyle = `rgba(255, 105, 180, ${0.3 + Math.sin(Date.now() * 0.005) * 0.2})`;
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, 35, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+                
+                ctx.fillStyle = '#FFD700';
+                ctx.font = 'bold 12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`Lv.${this.level}`, this.x, this.y - 35);
+
+                // NEW: Draw Detect icon
+                if(this.pokemon.hasDetect) {
+                    ctx.font = '18px Arial';
+                    ctx.fillText('👁️', this.x, this.y - 48);
+                }
+                
+                ctx.fillStyle = '#333';
+                ctx.fillRect(this.x - 20, this.y + 25, 40, 3);
+                ctx.fillStyle = '#2196F3';
+                ctx.fillRect(this.x - 20, this.y + 25, 40 * (this.exp / this.expToNext), 3);
+                
+                ctx.restore();
+            }
+        }
+
+        // Enemy class
+        class Enemy {
+            constructor(pokemon, pathIndex = 0) {
+                this.pokemon = {...pokemon};
+                this.types = pokemon.types;
+                this.isBoss = pokemon.isBoss || false;
+                
+                // EXPERT DIFFICULTY RAMPING SCALING
+                const baseHpMultiplier = 4.0; // 300% increase
+                const baseSpeedMultiplier = 1.5; // 50% increase
+                const exponentialWaveScaler = Math.pow(1.3, gameState.wave - 1);
+
+                this.hp = pokemon.hp * baseHpMultiplier * exponentialWaveScaler;
+                this.maxHp = this.hp;
+                this.speed = pokemon.speed * baseSpeedMultiplier * (1 + (gameState.wave * 0.05));
+                this.reward = Math.floor(pokemon.reward * (1 + gameState.wave * 0.1)); 
+                
+                this.pathIndex = pathIndex;
+                this.x = gameState.path[0].x;
+                this.y = gameState.path[0].y;
+                this.progress = 0;
+                this.statusEffects = [];
+                this.isDetected = false; // For ghost types
+                this.zzz = { active: false, yOffset: 0, alpha: 0 }; // For sleep animation
+                this.sprite = new Image();
+                this.sprite.src = SPRITE_URL + pokemon.dexId + '.png';
+            }
+
+            update(deltaTime = 1) {
+                this.processStatusEffects();
+                
+                if (this.pathIndex < gameState.path.length - 1) {
+                    const nextPoint = gameState.path[this.pathIndex + 1];
+                    const dx = nextPoint.x - this.x;
+                    const dy = nextPoint.y - this.y;
+                    const distance = Math.hypot(dx, dy);
+                    
+                    if (distance < 5) {
+                        this.pathIndex++;
+                        this.progress = this.pathIndex / gameState.path.length;
+                    } else {
+                        const moveSpeed = this.getEffectiveSpeed() * gameState.gameSpeed;
+                        this.x += (dx / distance) * moveSpeed;
+                        this.y += (dy / distance) * moveSpeed;
+                    }
+                } else {
+                    gameState.lives--;
+                    document.getElementById('lives').textContent = gameState.lives;
+                    return true;
+                }
+                
+                return this.hp <= 0;
+            }
+
+            getEffectiveSpeed() {
+                let speed = this.speed;
+                
+                if (this.hasStatus('slow')) speed *= 0.5;
+                if (this.hasStatus('freeze')) speed *= 0.1;
+                if (this.hasStatus('stun')) speed = 0;
+                if (this.hasStatus('sleep')) speed = 0;
+                if (this.hasStatus('paralyze')) speed *= 0.25;
+                if (this.hasStatus('confuse')) speed *= Math.random() < 0.5 ? -0.5 : 1;
+                
+                return speed;
+            }
+
+            hasStatus(type) {
+                return this.statusEffects.some(effect => effect.type === type);
+            }
+
+            processStatusEffects() {
+                this.statusEffects = this.statusEffects.filter(effect => {
+                    effect.duration--;
+                    if (effect.type === 'burn' && effect.duration % 30 === 0) this.takeDamage(this.maxHp * 0.01, 1, null);
+                    if (effect.type === 'poison' && effect.duration % 20 === 0) this.takeDamage(this.maxHp * 0.005, 1, null);
+                    return effect.duration > 0;
+                });
+
+                // Animate Zzz
+                if(this.hasStatus('sleep')) {
+                    this.zzz.active = true;
+                    this.zzz.yOffset -= 0.5;
+                    this.zzz.alpha = Math.min(1, this.zzz.alpha + 0.1);
+                    if(this.zzz.yOffset < -20) this.zzz.yOffset = 0;
+                } else if(this.zzz.active) {
+                     this.zzz.alpha -= 0.1;
+                     if(this.zzz.alpha <= 0) this.zzz.active = false;
+                }
+            }
+
+            applyStatus(type, duration) {
+                // Enemies wake up when they take damage, so don't re-apply sleep if already asleep.
+                if(type === 'sleep' && this.hasStatus('sleep')) return;
+
+                const existing = this.statusEffects.find(e => e.type === type);
+                if (existing) {
+                    existing.duration = Math.max(existing.duration, duration);
+                } else {
+                    this.statusEffects.push({ type, duration });
+                }
+
+                if(type === 'sleep') {
+                    this.zzz = { active: true, yOffset: 0, alpha: 0 };
+                }
+            }
+
+            takeDamage(damage, effectiveness, source) {
+                let finalDamage = damage;
+                // High Defense Mechanic
+                if (this.pokemon.defense && this.pokemon.defense > 0) {
+                    if (effectiveness > 1) { 
+                        finalDamage *= (effectiveness * 1.5);
+                    } else { 
+                        finalDamage *= (1 - this.pokemon.defense);
+                        finalDamage *= effectiveness;
+                    }
+                } else {
+                    finalDamage *= effectiveness;
+                }
+
+                this.hp -= finalDamage;
+                gameState.totalDamage += finalDamage;
+
+                // Wake up on taking damage
+                this.statusEffects = this.statusEffects.filter(e => e.type !== 'sleep');
+                
+                if (this.hp <= 0) {
+                    gameState.coins += this.reward;
+                    gameState.score += this.reward * 10;
+                    gameState.totalKills++;
+                    document.getElementById('coins').textContent = gameState.coins;
+                    document.getElementById('score').textContent = gameState.score;
+                    
+                    soundManager.playSound('enemyHit');
+                    
+                    if (source) {
+                        source.gainExp(this.reward);
+                        source.kills++;
+                        source.totalDamageDealt += finalDamage;
+                    }
+                    
+                    if (this.isBoss) soundManager.playSound('explosion');
+                    return true;
+                }
+                
+                return false;
+            }
+
+            draw(ctx) {
+                // Handle invisibility
+                if (this.pokemon.isInvisible && !this.isDetected) {
+                    return; // Don't draw
+                }
+
+                if (this.sprite.complete) {
+                    const size = this.isBoss ? 72 : 48;
+                    ctx.globalAlpha = (this.pokemon.isInvisible && this.isDetected) ? 0.6 : 1.0;
+                    ctx.drawImage(this.sprite, this.x - size/2, this.y - size/2, size, size);
+                    ctx.globalAlpha = 1.0;
+                    
+                    if (this.isBoss) {
+                        ctx.strokeStyle = `rgba(255, 0, 0, ${0.5 + Math.sin(Date.now() * 0.01) * 0.3})`;
+                        ctx.lineWidth = 3;
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, size/2 + 5, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+                }
+                
+                const barWidth = this.isBoss ? 60 : 40;
+                ctx.fillStyle = '#333';
+                ctx.fillRect(this.x - barWidth/2, this.y + (this.isBoss ? 30 : 20), barWidth, 4);
+                
+                const hpPercent = Math.max(0, this.hp / this.maxHp);
+                ctx.fillStyle = hpPercent > 0.5 ? '#4CAF50' : hpPercent > 0.25 ? '#FFC107' : '#F44336';
+                ctx.fillRect(this.x - barWidth/2, this.y + (this.isBoss ? 30 : 20), barWidth * hpPercent, 4);
+
+                // Show defense icon
+                if (this.pokemon.defense) {
+                    ctx.font = '14px Arial';
+                    ctx.fillText('🛡️', this.x - 25, this.y - 25);
+                }
+
+                // Show Zzz for sleep
+                if (this.zzz.active) {
+                    ctx.save();
+                    ctx.font = 'bold 16px Arial';
+                    ctx.fillStyle = `rgba(255, 255, 255, ${this.zzz.alpha})`;
+                    ctx.fillText('Zzz', this.x, this.y - 25 + this.zzz.yOffset);
+                    ctx.restore();
+                }
+                
+                let effectX = -10;
+                this.statusEffects.forEach(effect => {
+                    if (effect.type === 'sleep') return; // Handled by Zzz
+                    ctx.font = '14px Arial';
+                    let icon = '';
+                    switch(effect.type) {
+                        case 'burn': icon = '🔥'; break;
+                        case 'freeze': icon = '❄️'; break;
+                        case 'poison': icon = '☠️'; break;
+                        case 'slow': icon = '🐌'; break;
+                        case 'stun': icon = '💫'; break;
+                        case 'paralyze': icon = '⚡'; break;
+                        case 'confuse': icon = '❓'; break;
+                    }
+                    ctx.fillText(icon, this.x + effectX, this.y - 25);
+                    effectX += 15;
+                });
+                
+                if (this.isBoss) {
+                    ctx.fillStyle = '#FFD700';
+                    ctx.font = 'bold 10px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('BOSS', this.x, this.y - 35);
+                }
+            }
+        }
+
+        // Initialize path
+        function initPath() {
+            gameState.path = [];
+            const tileSize = 40;
+            const pathLayout = [
+                [0, 3], [1, 3], [2, 3], [3, 3], [4, 3], [5, 3], [6, 3], [7, 3], [8, 3],
+                [8, 4], [8, 5], [8, 6], [8, 7], [8, 8],
+                [7, 8], [6, 8], [5, 8], [4, 8], [3, 8], [2, 8],
+                [2, 9], [2, 10], [2, 11], [2, 12],
+                [3, 12], [4, 12], [5, 12], [6, 12], [7, 12], [8, 12], [9, 12], [10, 12], [11, 12], [12, 12],
+                [12, 11], [12, 10], [12, 9], [12, 8], [12, 7], [12, 6],
+                [13, 6], [14, 6], [15, 6], [16, 6], [17, 6],
+                [17, 7], [17, 8], [17, 9], [17, 10], [17, 11], [17, 12], [17, 13], [17, 14],
+                [16, 14], [15, 14], [14, 14], [13, 14], [12, 14], [11, 14], [10, 14], [9, 14], [8, 14], [7, 14], [6, 14],
+                [6, 15], [6, 16], [6, 17],
+                [7, 17], [8, 17], [9, 17], [10, 17], [11, 17], [12, 17], [13, 17], [14, 17], [15, 17], [16, 17], [17, 17], [18, 17], [19, 17], [20, 17], [21, 17], [22, 17],
+                [22, 16], [22, 15], [22, 14], [22, 13], [22, 12], [22, 11], [22, 10], [22, 9], [22, 8], [22, 7], [22, 6], [22, 5], [22, 4], [22, 3],
+                [23, 3], [24, 3], [25, 3], [26, 3], [27, 3], [28, 3]
+            ];
+            
+            pathLayout.forEach(([x, y]) => {
+                gameState.path.push({
+                    x: x * tileSize + 20,
+                    y: y * tileSize + 20
+                });
+            });
+        }
+
+        // Initialize Pokemon list
+        function initPokemonList() {
+            const listContent = document.getElementById('pokemonListContent');
+            if (!listContent) return;
+            
+            listContent.innerHTML = '';
+            
+            const filter = document.getElementById('pokemonFilter').value;
+            
+            towerPokemon.forEach(pokemon => {
+                // Apply filter
+                if (filter === 'affordable' && pokemon.cost > gameState.coins) return;
+                if (filter !== 'all' && filter !== 'affordable' && !pokemon.types.includes(filter)) return;
+                
+                const card = document.createElement('div');
+                card.className = 'pokemon-card';
+                if (pokemon.cost > gameState.coins) {
+                    card.classList.add('locked');
+                }
+                
+                card.onmouseenter = (e) => showTooltip(e, pokemon);
+                card.onmouseleave = hideTooltip;
+                
+                const sprite = document.createElement('img');
+                sprite.className = 'pokemon-sprite';
+                sprite.src = SPRITE_URL + pokemon.dexId + '.png';
+                
+                const info = document.createElement('div');
+                info.className = 'pokemon-info';
+                
+                const name = document.createElement('div');
+                name.className = 'pokemon-name';
+                name.textContent = pokemon.name;
+                
+                const cost = document.createElement('div');
+                cost.className = 'pokemon-cost';
+                cost.textContent = `💰 ${pokemon.cost}`;
+                
+                const stats = document.createElement('div');
+                stats.className = 'pokemon-stats';
+                stats.textContent = `DMG: ${pokemon.damage} | RNG: ${pokemon.range} | SPD: ${pokemon.attackSpeed}`;
+                
+                const types = document.createElement('div');
+                types.className = 'pokemon-types';
+                pokemon.types.forEach(type => {
+                    const badge = document.createElement('span');
+                    badge.className = `type-badge type-${type}`;
+                    badge.textContent = type;
+                    types.appendChild(badge);
+                });
+                
+                info.appendChild(name);
+                info.appendChild(cost);
+                info.appendChild(stats);
+                info.appendChild(types);
+                
+                card.appendChild(sprite);
+                card.appendChild(info);
+                
+                card.onclick = () => {
+                    if (pokemon.cost <= gameState.coins) {
+                        gameState.selectedPokemon = pokemon;
+                        document.querySelectorAll('.pokemon-card').forEach(c => c.classList.remove('selected'));
+                        card.classList.add('selected');
+                    }
+                };
+                
+                listContent.appendChild(card);
+            });
+        }
+
+        // Filter Pokemon list
+        function filterPokemon() {
+            initPokemonList();
+        }
+
+        // Tooltip functions
+        function showTooltip(e, pokemon) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.innerHTML = `
+                <div class="tooltip-title">${pokemon.name}</div>
+                <div class="tooltip-stat">Cost: ${pokemon.cost} coins</div>
+                <div class="tooltip-stat">Damage: ${pokemon.damage}</div>
+                <div class="tooltip-stat">Range: ${pokemon.range}</div>
+                <div class="tooltip-stat">Attack Speed: ${pokemon.attackSpeed}/sec</div>
+                <div class="tooltip-stat">${pokemon.description || 'A powerful Pokemon tower'}</div>
+            `;
+            tooltip.style.display = 'block';
+            tooltip.style.left = e.pageX + 10 + 'px';
+            tooltip.style.top = e.pageY + 10 + 'px';
+        }
+
+        function hideTooltip() {
+            document.getElementById('tooltip').style.display = 'none';
+        }
+
+        // Show tech tree for selected tower
+        function showTechTree(tower) {
+            gameState.selectedTower = tower;
+            gameState.selectedPokemon = null;
+            
+            const techTree = document.getElementById('techTree');
+            const evolutionContent = document.getElementById('evolutionContent');
+            const towerStats = document.getElementById('towerStats');
+            
+            techTree.classList.add('active');
+            document.getElementById('pokemonList').style.display = 'none';
+            
+            // Update tower stats
+            towerStats.innerHTML = `
+                <div class="tower-stat">Name: <span class="tower-stat-value">${tower.currentName}</span></div>
+                <div class="tower-stat">Level: <span class="tower-stat-value">${tower.level}</span></div>
+                <div class="tower-stat">Kills: <span class="tower-stat-value">${tower.kills}</span></div>
+                <div class="tower-stat">Total Damage: <span class="tower-stat-value">${Math.floor(tower.totalDamageDealt)}</span></div>
+                <div class="tower-stat">Current DPS: <span class="tower-stat-value">${Math.floor(tower.pokemon.damage * tower.damageBonus * tower.pokemon.attackSpeed * tower.speedBonus)}</span></div>
+                <div class="tower-stat">Attack: <span class="tower-stat-value">${tower.currentAttack}</span></div>
+            `;
+            
+            // Update upgrade counts
+            document.getElementById('dmgCount').textContent = `${tower.damageUpgrades}/3`;
+            document.getElementById('rngCount').textContent = `${tower.rangeUpgrades}/3`;
+            document.getElementById('spdCount').textContent = `${tower.speedUpgrades}/3`;
+            
+            // Disable buttons if maxed or unavailable
+            document.getElementById('dmgUpgrade').disabled = tower.damageUpgrades >= 3;
+            document.getElementById('rngUpgrade').disabled = tower.rangeUpgrades >= 3;
+            document.getElementById('spdUpgrade').disabled = tower.speedUpgrades >= 3;
+            
+            // Check if rare candy evolution is available
+            const nextEvo = tower.pokemon.evolutionLine[tower.evolutionStage + 1];
+            const canEvolveWithCandy = nextEvo && !nextEvo.mega && !tower.isMegaEvolved && gameState.rareCandies > 0;
+            document.querySelector('button[onclick="useRareCandy()"]').disabled = !canEvolveWithCandy;
+            
+            // Check if mega evolution is available
+            const canMegaEvolve = tower.pokemon.evolutionLine.filter(e => e.mega).length > 0 && !tower.isMegaEvolved && gameState.megaStones > 0;
+            document.querySelector('button[onclick="megaEvolveTower()"]').disabled = !canMegaEvolve;
+            
+            evolutionContent.innerHTML = '';
+            
+            // Create horizontal evolution path
+            const evolutionPath = document.createElement('div');
+            evolutionPath.className = 'evolution-path';
+            
+            const evolutionLine = document.createElement('div');
+            evolutionLine.className = 'evolution-line';
+            
+            // Group evolutions
+            const regularEvolutions = tower.pokemon.evolutionLine.filter(e => !e.mega);
+            const megaEvolutions = tower.pokemon.evolutionLine.filter(e => e.mega);
+            
+            // Draw regular evolution line
+            regularEvolutions.forEach((evo, index) => {
+                const pokemonDiv = document.createElement('div');
+                pokemonDiv.className = 'evolution-pokemon';
+                
+                if (!tower.isMegaEvolved && index === tower.evolutionStage) {
+                    pokemonDiv.classList.add('current');
+                } else if (!tower.isMegaEvolved && index === tower.evolutionStage + 1 && tower.level >= evo.level - 5) {
+                    pokemonDiv.classList.add('available');
+                } else if (index > tower.evolutionStage && !tower.isMegaEvolved) {
+                    pokemonDiv.classList.add('locked');
+                }
+                
+                const sprite = document.createElement('img');
+                sprite.className = 'evo-sprite';
+                sprite.src = SPRITE_URL + evo.dexId + '.png';
+                
+                const name = document.createElement('div');
+                name.className = 'evo-name';
+                name.textContent = evo.name;
+                
+                const req = document.createElement('div');
+                req.className = 'evo-req';
+                req.textContent = `Lv.${evo.level}`;
+                
+                pokemonDiv.appendChild(sprite);
+                pokemonDiv.appendChild(name);
+                pokemonDiv.appendChild(req);
+                
+                evolutionLine.appendChild(pokemonDiv);
+                
+                if (index < regularEvolutions.length - 1) {
+                    const arrow = document.createElement('div');
+                    arrow.className = 'evolution-arrow';
+                    arrow.textContent = '→';
+                    evolutionLine.appendChild(arrow);
+                }
+            });
+            
+            // Add mega evolutions if available
+            if (megaEvolutions.length > 0) {
+                const megaArrow = document.createElement('div');
+                megaArrow.className = 'evolution-arrow';
+                megaArrow.textContent = '→';
+                evolutionLine.appendChild(megaArrow);
+                
+                if (megaEvolutions.length === 1) {
+                    const megaDiv = document.createElement('div');
+                    megaDiv.className = 'evolution-pokemon mega';
+                    if (tower.isMegaEvolved) {
+                        megaDiv.classList.add('current');
+                    } else if (tower.evolutionStage === regularEvolutions.length - 1) {
+                        megaDiv.classList.add('available');
+                    } else {
+                        megaDiv.classList.add('locked');
+                    }
+                    
+                    const sprite = document.createElement('img');
+                    sprite.className = 'evo-sprite';
+                    sprite.src = MEGA_SPRITE_MAP[megaEvolutions[0].name] || (SPRITE_URL + megaEvolutions[0].dexId + '.png');
+                    
+                    const name = document.createElement('div');
+                    name.className = 'evo-name';
+                    name.textContent = megaEvolutions[0].name;
+                    
+                    const indicator = document.createElement('div');
+                    indicator.className = 'mega-indicator';
+                    indicator.textContent = 'MEGA';
+                    
+                    megaDiv.appendChild(sprite);
+                    megaDiv.appendChild(name);
+                    megaDiv.appendChild(indicator);
+                    
+                    evolutionLine.appendChild(megaDiv);
+                } else {
+                    const megaBranch = document.createElement('div');
+                    megaBranch.className = 'mega-branch';
+                    
+                    megaEvolutions.forEach((mega, idx) => {
+                        const megaDiv = document.createElement('div');
+                        megaDiv.className = 'evolution-pokemon mega';
+                        if (tower.isMegaEvolved && tower.megaForm === idx) {
+                            megaDiv.classList.add('current');
+                        } else if (!tower.isMegaEvolved && tower.evolutionStage === regularEvolutions.length - 1) {
+                            megaDiv.classList.add('available');
+                        } else {
+                            megaDiv.classList.add('locked');
+                        }
+                        
+                        const sprite = document.createElement('img');
+                        sprite.className = 'evo-sprite';
+                        sprite.src = MEGA_SPRITE_MAP[mega.name] || (SPRITE_URL + mega.dexId + '.png');
+                        
+                        const name = document.createElement('div');
+                        name.className = 'evo-name';
+                        name.textContent = mega.name;
+                        
+                        const indicator = document.createElement('div');
+                        indicator.className = 'mega-indicator';
+                        indicator.textContent = 'MEGA';
+                        
+                        megaDiv.appendChild(sprite);
+                        megaDiv.appendChild(name);
+                        megaDiv.appendChild(indicator);
+                        
+                        megaDiv.onclick = () => {
+                            if (!tower.isMegaEvolved && tower.evolutionStage === regularEvolutions.length - 1 && gameState.megaStones > 0) {
+                                megaEvolveTower(idx);
+                            }
+                        };
+                        
+                        megaBranch.appendChild(megaDiv);
+                    });
+                    
+                    evolutionLine.appendChild(megaBranch);
+                }
+            }
+            
+            evolutionPath.appendChild(evolutionLine);
+            evolutionContent.appendChild(evolutionPath);
+        }
+
+        // Upgrade functions
+        function upgradeTowerDamage() {
+            if (gameState.selectedTower && gameState.coins >= 200 && gameState.selectedTower.damageUpgrades < 3) {
+                gameState.coins -= 200;
+                gameState.selectedTower.damageBonus *= 1.3;
+                gameState.selectedTower.damageUpgrades++;
+                document.getElementById('coins').textContent = gameState.coins;
+                showTechTree(gameState.selectedTower);
+            }
+        }
+
+        function upgradeTowerRange() {
+            if (gameState.selectedTower && gameState.coins >= 160 && gameState.selectedTower.rangeUpgrades < 3) {
+                gameState.coins -= 160;
+                gameState.selectedTower.rangeBonus *= 1.2;
+                gameState.selectedTower.rangeUpgrades++;
+                document.getElementById('coins').textContent = gameState.coins;
+                showTechTree(gameState.selectedTower);
+            }
+        }
+
+        function upgradeTowerSpeed() {
+            if (gameState.selectedTower && gameState.coins >= 180 && gameState.selectedTower.speedUpgrades < 3) {
+                gameState.coins -= 180;
+                gameState.selectedTower.speedBonus *= 1.25;
+                gameState.selectedTower.speedUpgrades++;
+                document.getElementById('coins').textContent = gameState.coins;
+                showTechTree(gameState.selectedTower);
+            }
+        }
+
+        function evolveTower() {
+            if (gameState.selectedTower && gameState.coins >= 300) {
+                const tower = gameState.selectedTower;
+                const nextEvo = tower.pokemon.evolutionLine[tower.evolutionStage + 1];
+                if (nextEvo && !nextEvo.mega && tower.level >= nextEvo.level - 5) {
+                    gameState.coins -= 300;
+                    tower.evolve();
+                    document.getElementById('coins').textContent = gameState.coins;
+                    showTechTree(tower);
+                }
+            }
+        }
+
+        function megaEvolveTower(formIndex = 0) {
+            if (gameState.selectedTower && gameState.megaStones > 0) {
+                const tower = gameState.selectedTower;
+                const megaEvolutions = tower.pokemon.evolutionLine.filter(e => e.mega);
+                if (megaEvolutions.length > 0 && !tower.isMegaEvolved) {
+                    gameState.megaStones--;
+                    tower.megaEvolve(formIndex);
+                    document.getElementById('megaStones').textContent = gameState.megaStones;
+                    showTechTree(tower);
+                }
+            }
+        }
+
+        function chooseEeveeEvolution(evoIndex) {
+            if (gameState.selectedTower && gameState.selectedTower.currentName === 'Eevee') {
+                const tower = gameState.selectedTower;
+                // Set evolution stage to the chosen evolution
+                tower.evolutionStage = evoIndex;
+                tower.updateSprite();
+                
+                soundManager.playSound('evolve');
+                
+                // Evolution effect
+                for (let i = 0; i < 20; i++) {
+                    const angle = (Math.PI * 2 * i) / 20;
+                    gameState.particles.push({
+                        x: tower.x,
+                        y: tower.y,
+                        vx: Math.cos(angle) * 4,
+                        vy: Math.sin(angle) * 4,
+                        life: 40,
+                        color: '#FFD700',
+                        size: 4
+                    });
+                }
+                
+                // Boost stats
+                tower.pokemon.damage *= 1.4;
+                tower.pokemon.range *= 1.15;
+                tower.pokemon.attackSpeed *= 1.1;
+                
+                showTechTree(tower);
+            }
+        }
+
+        function useRareCandy() {
+            if (gameState.selectedTower && gameState.rareCandies > 0) {
+                const tower = gameState.selectedTower;
+                
+                // Special handling for Eevee
+                if (tower.currentName === 'Eevee') {
+                    // Show evolution choice dialog (simplified - just evolve to random)
+                    const evoOptions = [1, 2, 3, 4, 5, 6, 7, 8];
+                    const randomEvo = evoOptions[Math.floor(Math.random() * evoOptions.length)];
+                    gameState.rareCandies--;
+                    chooseEeveeEvolution(randomEvo);
+                    document.getElementById('rareCandies').textContent = gameState.rareCandies;
+                    return;
+                }
+                
+                const nextEvo = tower.pokemon.evolutionLine[tower.evolutionStage + 1];
+                if (nextEvo && !nextEvo.mega && !tower.isMegaEvolved) {
+                    gameState.rareCandies--;
+                    tower.evolve();
+                    document.getElementById('rareCandies').textContent = gameState.rareCandies;
+                    soundManager.playSound('evolve');
+                    showTechTree(tower);
+                }
+            }
+        }
+
+        function sellTower() {
+            if (gameState.selectedTower) {
+                const tower = gameState.selectedTower;
+                const sellValue = Math.floor(tower.pokemon.cost * 0.6);
+                gameState.coins += sellValue;
+                document.getElementById('coins').textContent = gameState.coins;
+                
+                const index = gameState.towers.indexOf(tower);
+                if (index > -1) {
+                    gameState.towers.splice(index, 1);
+                }
+                
+                gameState.selectedTower = null;
+                closeTechTree();
+            }
+        }
+
+        function closeTechTree() {
+            gameState.selectedTower = null;
+            document.getElementById('techTree').classList.remove('active');
+            document.getElementById('pokemonList').style.display = 'block';
+            document.getElementById('pokemonFilter').value = 'all';
+            initPokemonList();
+        }
+
+        // Game control functions
+        function togglePause() {
+            gameState.gamePaused = !gameState.gamePaused;
+            document.getElementById('pauseOverlay').classList.toggle('active', gameState.gamePaused);
+        }
+
+        function setGameSpeed(speed) {
+            gameState.gameSpeed = speed;
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`speed${speed}`).classList.add('active');
+        }
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (!gameState.gameRunning) return;
+            
+            // If quiz is open, Enter should submit it, but other keys do nothing.
+            if (gameState.quizActive) {
+                if (e.key === 'Enter') {
+                    submitQuiz();
+                }
+                return;
+            }
+
+            switch(e.key.toLowerCase()) {
+                case 'p':
+                    togglePause();
+                    break;
+                case ' ':
+                    e.preventDefault();
+                    if (!gameState.waveActive) startWave();
+                    break;
+                case '1':
+                    setGameSpeed(1);
+                    break;
+                case '2':
+                    setGameSpeed(2);
+                    break;
+                case '3':
+                    setGameSpeed(3);
+                    break;
+                case 'escape':
+                    gameState.selectedPokemon = null;
+                    closeTechTree();
+                    document.querySelectorAll('.pokemon-card').forEach(c => c.classList.remove('selected'));
+                    break;
+            }
+        });
+
+        // Canvas click handler
+        canvas.addEventListener('click', (e) => {
+            if (gameState.gamePaused) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Check if clicking on a tower
+            let clickedTower = false;
+            for (const tower of gameState.towers) {
+                if (Math.hypot(tower.x - x, tower.y - y) < 32) {
+                    showTechTree(tower);
+                    clickedTower = true;
+                    return;
+                }
+            }
+            
+            // If clicking elsewhere, deselect tower
+            if (!clickedTower && gameState.selectedTower) {
+                closeTechTree();
+                return;
+            }
+            
+            // Place new tower
+            if (gameState.selectedPokemon) {
+                let valid = true;
+                
+                // Check distance from path
+                for (const point of gameState.path) {
+                    if (Math.hypot(point.x - x, point.y - y) < 50) {
+                        valid = false;
+                        break;
+                    }
+                }
+                
+                // Check overlap with other towers
+                for (const tower of gameState.towers) {
+                    if (Math.hypot(tower.x - x, tower.y - y) < 60) {
+                        valid = false;
+                        break;
+                    }
+                }
+                
+                if (valid && gameState.coins >= gameState.selectedPokemon.cost) {
+                    gameState.coins -= gameState.selectedPokemon.cost;
+                    const tower = new Tower(x, y, gameState.selectedPokemon);
+                    gameState.towers.push(tower);
+                    document.getElementById('coins').textContent = gameState.coins;
+                    
+                    soundManager.playSound('place');
+                    
+                    // Placement effect
+                    for (let i = 0; i < 10; i++) {
+                        const angle = (Math.PI * 2 * i) / 10;
+                        gameState.particles.push({
+                            x: x,
+                            y: y,
+                            vx: Math.cos(angle) * 2,
+                            vy: Math.sin(angle) * 2,
+                            life: 20,
+                            color: '#FFD700',
+                            size: 3
+                        });
+                    }
+                    
+                    initPokemonList(); // Refresh to update affordability
+                }
+            }
+        });
+
+        // Update enemy preview
+        function updateEnemyPreview() {
+            const previewList = document.getElementById('enemyPreviewList');
+            previewList.innerHTML = '';
+            
+            // Determine which enemies will appear in next wave
+            const enemiesForWave = [];
+            const nextWave = gameState.wave + 1;
+            const maxEnemyIndex = Math.min(Math.floor(nextWave / 2), enemyPokemon.length - 1);
+            
+            // Add regular enemies
+            for (let i = 0; i <= maxEnemyIndex; i++) {
+                enemiesForWave.push(enemyPokemon[i]);
+            }
+            
+            // Add special previews
+            if (nextWave % 4 === 0) enemiesForWave.push(enemyPokemon.find(p => p.isInvisible));
+            if (nextWave % 5 === 0) {
+                const legendaryIndex = (Math.floor(nextWave / 5) - 1) % 2;
+                enemiesForWave.push(bossPokemon[2 + legendaryIndex]); // Lugia, Ho-Oh
+            }
+            if (nextWave % 10 === 0) {
+                const defenseBossIndex = (Math.floor(nextWave / 10) - 1) % 2;
+                enemiesForWave.push(bossPokemon[4 + defenseBossIndex]); // Rhydon, Steelix
+            }
+            
+            
+            enemiesForWave.forEach(enemy => {
+                if(!enemy) return;
+                const item = document.createElement('div');
+                item.className = 'enemy-preview-item';
+                if (enemy.isBoss) item.classList.add('boss');
+                
+                const sprite = document.createElement('img');
+                sprite.className = 'enemy-preview-sprite';
+                sprite.src = SPRITE_URL + enemy.dexId + '.png';
+                if(enemy.isInvisible) sprite.style.opacity = '0.3';
+                
+                const name = document.createElement('div');
+                name.style.color = '#ddd';
+                name.style.fontSize = '10px';
+                name.textContent = enemy.name;
+                
+                if (enemy.isBoss) {
+                    const bossIndicator = document.createElement('div');
+                    bossIndicator.className = 'boss-indicator';
+                    bossIndicator.textContent = '!';
+                    item.appendChild(bossIndicator);
+                }
+                
+                item.appendChild(sprite);
+                item.appendChild(name);
+                previewList.appendChild(item);
+            });
+        }
+
+        // Start wave by showing the quiz
+        function startWave() {
+            if (!gameState.waveActive) {
+                showQuiz();
+            }
+        }
+
+        // Main game loop
+        function gameLoop(currentTime) {
+            if (!gameState.gameRunning) return;
+            
+            if (!gameState.gamePaused) {
+                const deltaTime = currentTime - gameState.lastFrameTime;
+                gameState.lastFrameTime = currentTime;
+                
+                // Clear canvas
+                ctx.fillStyle = '#2d5016';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw path
+                ctx.strokeStyle = '#d4a574';
+                ctx.lineWidth = 40;
+                ctx.lineCap = 'square';
+                ctx.lineJoin = 'miter';
+                ctx.beginPath();
+                gameState.path.forEach((point, index) => {
+                    if (index === 0) {
+                        ctx.moveTo(point.x, point.y);
+                    } else {
+                        ctx.lineTo(point.x, point.y);
+                    }
+                });
+                ctx.stroke();
+                
+                // Spawn enemies
+                if (gameState.waveActive) {
+                    gameState.spawnTimer++;
+                    
+                    const spawnInterval = Math.max(20, 50 - gameState.wave);
+                    
+                    if (gameState.spawnTimer > spawnInterval / gameState.gameSpeed && gameState.enemiesSpawned < gameState.enemiesInWave) {
+                        let enemyType;
+                        
+                        // Special spawning logic
+                        if (gameState.wave % 4 === 0 && Math.random() < 0.25) { // Invisible wave
+                             enemyType = enemyPokemon.find(p => p.isInvisible);
+                        } else if (Math.random() < 0.2) { // Fast electric wave
+                            const fastEnemies = enemyPokemon.filter(p => p.types.includes('electric'));
+                            enemyType = fastEnemies[Math.floor(Math.random() * fastEnemies.length)];
+                        } else {
+                            const regularEnemies = enemyPokemon.filter(p => !p.isInvisible && !p.types.includes('electric'));
+                            const maxEnemyIndex = Math.min(Math.floor(gameState.wave / 2), regularEnemies.length - 1);
+                            enemyType = regularEnemies[Math.floor(Math.random() * (maxEnemyIndex + 1))];
+                        }
+
+                        gameState.enemies.push(new Enemy(enemyType));
+                        gameState.enemiesSpawned++;
+                        gameState.spawnTimer = 0;
+                    }
+
+                    // Boss spawning
+                    if (gameState.enemiesSpawned >= gameState.enemiesInWave && !gameState.bossesSpawned) {
+                        if (gameState.wave % 5 === 0) {
+                             const legendaryIndex = (Math.floor(gameState.wave / 5) - 1) % 2;
+                             gameState.enemies.push(new Enemy(bossPokemon[2 + legendaryIndex]));
+                        }
+                        if (gameState.wave % 10 === 0) {
+                            const regularBossIndex = (Math.floor(gameState.wave / 10) - 1) % 2;
+                            const defenseBossIndex = regularBossIndex;
+                            gameState.enemies.push(new Enemy(bossPokemon[regularBossIndex]));
+                            gameState.enemies.push(new Enemy(bossPokemon[4 + defenseBossIndex]));
+                        }
+                        gameState.bossesSpawned = true; // Ensure bosses spawn only once
+                    }
+                    
+                    // Update wave progress bar
+                    const totalEnemiesThisWave = gameState.enemiesInWave + (gameState.bossesSpawned ? gameState.enemies.filter(e=>e.isBoss).length : 0);
+                    const killsThisWave = totalEnemiesThisWave - gameState.enemies.length;
+                    const progress = totalEnemiesThisWave > 0 ? (killsThisWave / totalEnemiesThisWave) * 100 : 0;
+                    document.getElementById('waveProgressBar').style.width = progress + '%';
+                    
+                    // Check wave completion
+                    if (gameState.enemiesSpawned >= gameState.enemiesInWave && gameState.enemies.length === 0) {
+                        gameState.waveActive = false;
+                        soundManager.playSound('waveComplete');
+                        
+                        gameState.wave++;
+                        gameState.bossesSpawned = false; // Reset for next boss wave
+                        
+                        const bonus = 150 + gameState.wave * 35 + Math.floor(gameState.wave / 5) * 150;
+                        gameState.coins += bonus;
+                        
+                        if (gameState.wave % 5 === 0) gameState.megaStones++;
+                        if (gameState.wave % 7 === 0) gameState.rareCandies++;
+                        
+                        document.getElementById('coins').textContent = gameState.coins;
+                        document.getElementById('megaStones').textContent = gameState.megaStones;
+                        document.getElementById('rareCandies').textContent = gameState.rareCandies;
+                        document.getElementById('currentWave').textContent = gameState.wave;
+                        document.getElementById('startWaveBtn').disabled = false;
+                        document.getElementById('waveInfo').textContent = `Wave ${gameState.wave} - Ready`;
+                        document.getElementById('waveProgressBar').style.width = '0%';
+                        
+                        updateEnemyPreview();
+                        initPokemonList();
+                    }
+                }
+
+                // NEW: Detection Logic
+                gameState.enemies.forEach(enemy => {
+                    if (enemy.pokemon.isInvisible) {
+                        enemy.isDetected = false; // Reset detection each frame
+                        for (const tower of gameState.towers) {
+                            if (tower.pokemon.hasDetect) {
+                                if (Math.hypot(enemy.x - tower.x, enemy.y - tower.y) < tower.pokemon.range * tower.rangeBonus) {
+                                    enemy.isDetected = true;
+                                    break; 
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // Update and draw enemies
+                gameState.enemies = gameState.enemies.filter(enemy => {
+                    const shouldRemove = enemy.update(deltaTime);
+                    if (!shouldRemove) {
+                        enemy.draw(ctx);
+                        return true;
+                    }
+                    return false;
+                });
+                
+                // Update and draw towers
+                gameState.towers.forEach(tower => {
+                    tower.update(gameState.enemies, deltaTime);
+                    tower.draw(ctx);
+                });
+                
+                // Update and draw attack animations
+                gameState.activeAnimations = gameState.activeAnimations.filter(animation => {
+                    const shouldRemove = animation.update();
+                    animation.draw(ctx);
+                    return !shouldRemove;
+                });
+                
+                // Update and draw projectiles
+                gameState.projectiles = gameState.projectiles.filter(projectile => {
+                    projectile.life--;
+                    
+                    if (projectile.homing && projectile.target && projectile.target.hp > 0) {
+                        const angle = Math.atan2(projectile.target.y - projectile.y, projectile.target.x - projectile.x);
+                        const speed = projectile.type === 'mega-aura-sphere' ? 8 : 6;
+                        projectile.vx = Math.cos(angle) * speed;
+                        projectile.vy = Math.sin(angle) * speed;
+                    }
+                    
+                    projectile.x += projectile.vx * gameState.gameSpeed;
+                    projectile.y += projectile.vy * gameState.gameSpeed;
+                    
+                    const hitRadius = projectile.type === 'mega-aura-sphere' ? 80 : 15;
+                    if (projectile.target && Math.hypot(projectile.x - projectile.target.x, projectile.y - projectile.target.y) < hitRadius) {
+                        if (projectile.type === 'mega-aura-sphere') {
+                            // AoE explosion
+                            soundManager.playSound('explosion');
+                            gameState.enemies.forEach(enemy => {
+                                if (Math.hypot(projectile.x - enemy.x, projectile.y - enemy.y) < 100) {
+                                    const effectiveness = projectile.tower.calculateTypeEffectiveness(enemy.types);
+                                    enemy.takeDamage(projectile.damage, effectiveness, projectile.tower);
+                                }
+                            });
+                        } else {
+                            const effectiveness = projectile.tower.calculateTypeEffectiveness(projectile.target.types);
+                            projectile.target.takeDamage(projectile.damage, effectiveness, projectile.tower);
+                        }
+
+                        if (projectile.burnChance) projectile.target.applyStatus('burn', 90);
+                        return false;
+                    }
+                    
+                    // Draw projectile
+                    if (projectile.life > 0) {
+                        ctx.save();
+                         // (Drawing logic is unchanged, so omitted for brevity)
+                        ctx.fillStyle = '#FFD700';
+                        ctx.beginPath();
+                        ctx.arc(projectile.x, projectile.y, projectile.size || 6, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.restore();
+                        return true;
+                    }
+                    return false;
+                });
+                
+                // Update and draw particles
+                gameState.particles = gameState.particles.filter(particle => {
+                    particle.x += (particle.vx || 0) * gameState.gameSpeed;
+                    particle.y += (particle.vy || 0) * gameState.gameSpeed;
+                    if (particle.vx) particle.vx *= 0.98;
+                    if (particle.vy) particle.vy *= 0.98;
+                    particle.life--;
+                    
+                    if (particle.life > 0) {
+                        ctx.fillStyle = particle.color;
+                        ctx.globalAlpha = particle.life / 60;
+                        ctx.beginPath();
+                        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.globalAlpha = 1;
+                        return true;
+                    }
+                    return false;
+                });
+                
+                // Check game over
+                if (gameState.lives <= 0) {
+                    gameState.gameRunning = false;
+                    soundManager.playSound('gameOver');
+                    setTimeout(() => {
+                        alert(`Game Over!\nWaves Survived: ${gameState.wave - 1}\nFinal Score: ${gameState.score}\nTotal Kills: ${gameState.totalKills}\n\nYou have been overwhelmed.`);
+                        location.reload();
+                    }, 500);
+                }
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Sound toggle button
+        function toggleSoundButton() {
+            const enabled = soundManager.toggleSound();
+            document.getElementById('soundBtn').textContent = enabled ? '🔊' : '🔇';
+        }
+
+        // Start game
+        function startGame() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameContainer').style.display = 'flex';
+            
+            // Initialize sound system
+            soundManager.init();
+            
+            // Initialize UI values from gameState
+            document.getElementById('coins').textContent = gameState.coins;
+            document.getElementById('lives').textContent = gameState.lives;
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('megaStones').textContent = gameState.megaStones;
+            document.getElementById('rareCandies').textContent = gameState.rareCandies;
+            document.getElementById('currentWave').textContent = gameState.wave;
+            
+            initPath();
+            initPokemonList();
+            updateEnemyPreview();
+            setGameSpeed(1);
+            
+            gameState.gameRunning = true;
+            gameState.lastFrameTime = performance.now();
+            gameLoop(performance.now());
+        }
+
+        // Window resize handler
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth - 450;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
