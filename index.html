@@ -728,6 +728,44 @@
             backdrop-filter: blur(5px);
         }
 
+        #changelogOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            backdrop-filter: blur(8px);
+        }
+
+        #changelogContent {
+            background: linear-gradient(135deg, #1a3a1a, #0a2a0a);
+            border: 3px solid #4CAF50;
+            border-radius: 20px;
+            padding: 25px 35px;
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 0 50px rgba(76, 175, 80, 0.6);
+        }
+
+        #changelogContent ul {
+            list-style-type: disc;
+            padding-left: 0;
+        }
+
+        #changelogContent li {
+            margin-bottom: 5px;
+        }
+
         #quizContent {
             background: linear-gradient(135deg, #2a2a4a, #1a1a3a);
             border: 3px solid #FFD700;
@@ -950,6 +988,43 @@
                 <!-- Questions will be generated here by JS -->
             </div>
             <button id="submitQuizBtn" onclick="submitQuiz()">Start Wave & Claim Coins</button>
+        </div>
+    </div>
+
+    <div id="changelogOverlay" style="display: none;">
+        <div id="changelogContent">
+            <h2 style="color: #FFD700; margin-bottom: 15px;">📋 Changelog - v1.5.0</h2>
+            <div style="text-align: left; max-height: 400px; overflow-y: auto; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px; margin-bottom: 15px;">
+                <p style="color: #4CAF50; font-weight: bold; margin-bottom: 8px;">✨ Mega Charizard X Skills Enhanced:</p>
+                <ul style="color: #ddd; font-size: 13px; line-height: 1.6; margin-left: 20px;">
+                    <li><b style="color: #9400D3;">Dragon Claw</b> - 3 curved claw arcs (wolf/velociraptor style), 160px AoE cone</li>
+                    <li><b style="color: #FF4500;">Outrage</b> - 180px AoE radius, 6 rapid hits + final rage burst</li>
+                    <li><b style="color: #FFFF00;">Thunder Punch</b> - 120px AoE, 8 lightning bolts, paralyze effect</li>
+                </ul>
+
+                <p style="color: #4CAF50; font-weight: bold; margin-top: 15px; margin-bottom: 8px;">🎨 Evolution UI Improvements:</p>
+                <ul style="color: #ddd; font-size: 13px; line-height: 1.6; margin-left: 20px;">
+                    <li>Mega evolution buttons raise up on hover</li>
+                    <li>Gold border & glow effects on available megas</li>
+                    <li>"CLICK TO EVOLVE" hint for available mega evolutions</li>
+                </ul>
+
+                <p style="color: #4CAF50; font-weight: bold; margin-top: 15px; margin-bottom: 8px;">🗺️ Placement System:</p>
+                <ul style="color: #ddd; font-size: 13px; line-height: 1.6; margin-left: 20px;">
+                    <li>Light grid lines show placeable tile locations</li>
+                    <li>Tower preview when hovering (green=valid, red=invalid)</li>
+                    <li>Range circle preview before placing</li>
+                </ul>
+
+                <p style="color: #4CAF50; font-weight: bold; margin-top: 15px; margin-bottom: 8px;">⚔️ Skill System Fixes:</p>
+                <ul style="color: #ddd; font-size: 13px; line-height: 1.6; margin-left: 20px;">
+                    <li>Clicking skills now immediately changes attack animation</li>
+                    <li>Visual feedback when changing skills (particles + sound)</li>
+                    <li>90+ unique skill animations for different attacks</li>
+                    <li>Mewtwo's 4 skills have unique epic animations</li>
+                </ul>
+            </div>
+            <button class="wave-btn" onclick="closeChangelog()">Got it!</button>
         </div>
     </div>
 
@@ -7279,9 +7354,21 @@
             document.getElementById('soundBtn').textContent = enabled ? '🔊' : '🔇';
         }
 
+        // Changelog functions
+        function showChangelog() {
+            document.getElementById('changelogOverlay').style.display = 'flex';
+        }
+
+        function closeChangelog() {
+            document.getElementById('changelogOverlay').style.display = 'none';
+        }
+
         // Start game
         function startGame() {
             document.getElementById('startScreen').style.display = 'none';
+
+            // Show changelog on first boot
+            showChangelog();
             document.getElementById('gameContainer').style.display = 'flex';
             
             // Initialize sound system
