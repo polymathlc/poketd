@@ -1599,126 +1599,137 @@
             ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
             // Add subtle texture pattern
-            ctx.globalAlpha = 0.1;
-            for (let x = 0; x < canvasWidth; x += 8) {
-                for (let y = 0; y < canvasHeight; y += 8) {
-                    if ((x + y) % 16 === 0) {
+            ctx.globalAlpha = 0.08;
+            for (let x = 0; x < canvasWidth; x += 12) {
+                for (let y = 0; y < canvasHeight; y += 12) {
+                    if ((x + y) % 24 === 0) {
                         ctx.fillStyle = '#1a3d1a';
-                        ctx.fillRect(x, y, 4, 4);
+                        ctx.fillRect(x, y, 6, 6);
                     }
                 }
             }
             ctx.globalAlpha = 1;
 
-            // Generate decorations if not cached
-            if (!backgroundDecorations) {
+            // Generate decorations if not cached or invalid
+            if (!backgroundDecorations || !backgroundDecorations.trees) {
                 backgroundDecorations = generateBackgroundDecorations(canvasWidth, canvasHeight);
             }
 
-            // Draw grass patches
-            backgroundDecorations.grassPatches.forEach(patch => {
+            // Safely draw grass patches
+            if (backgroundDecorations.grassPatches) {
                 ctx.strokeStyle = '#228B22';
                 ctx.lineWidth = 1.5;
-                for (let b = 0; b < patch.blades; b++) {
-                    const offsetX = (b - patch.blades / 2) * 3;
+                backgroundDecorations.grassPatches.forEach(patch => {
+                    for (let b = 0; b < patch.blades; b++) {
+                        const offsetX = (b - patch.blades / 2) * 3;
+                        ctx.beginPath();
+                        ctx.moveTo(patch.x + offsetX, patch.y);
+                        ctx.quadraticCurveTo(
+                            patch.x + offsetX + (Math.random() - 0.5) * 6,
+                            patch.y - patch.height / 2,
+                            patch.x + offsetX + (Math.random() - 0.5) * 8,
+                            patch.y - patch.height
+                        );
+                        ctx.stroke();
+                    }
+                });
+            }
+
+            // Safely draw rocks
+            if (backgroundDecorations.rocks) {
+                backgroundDecorations.rocks.forEach(rock => {
+                    ctx.fillStyle = `rgba(100, 90, 80, ${0.6 + rock.shade})`;
                     ctx.beginPath();
-                    ctx.moveTo(patch.x + offsetX, patch.y);
-                    ctx.quadraticCurveTo(
-                        patch.x + offsetX + (Math.random() - 0.5) * 6,
-                        patch.y - patch.height / 2,
-                        patch.x + offsetX + (Math.random() - 0.5) * 8,
-                        patch.y - patch.height
-                    );
-                    ctx.stroke();
-                }
-            });
-
-            // Draw rocks
-            backgroundDecorations.rocks.forEach(rock => {
-                ctx.fillStyle = `rgba(100, 90, 80, ${0.6 + rock.shade})`;
-                ctx.beginPath();
-                ctx.ellipse(rock.x, rock.y, rock.size, rock.size * 0.7, 0, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = `rgba(130, 120, 110, ${0.4 + rock.shade})`;
-                ctx.beginPath();
-                ctx.ellipse(rock.x - rock.size * 0.2, rock.y - rock.size * 0.2, rock.size * 0.5, rock.size * 0.35, 0, 0, Math.PI * 2);
-                ctx.fill();
-            });
-
-            // Draw bushes
-            backgroundDecorations.bushes.forEach(bush => {
-                const bushGradient = ctx.createRadialGradient(bush.x, bush.y, 0, bush.x, bush.y, bush.size);
-                bushGradient.addColorStop(0, '#2d6b2d');
-                bushGradient.addColorStop(0.7, '#1e4d1e');
-                bushGradient.addColorStop(1, 'rgba(30, 77, 30, 0)');
-                ctx.fillStyle = bushGradient;
-                ctx.beginPath();
-                ctx.arc(bush.x, bush.y, bush.size, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Add leaf details
-                for (let i = 0; i < 5; i++) {
-                    const angle = (Math.PI * 2 * i) / 5;
-                    const leafX = bush.x + Math.cos(angle) * bush.size * 0.6;
-                    const leafY = bush.y + Math.sin(angle) * bush.size * 0.6;
-                    ctx.fillStyle = '#3d8b3d';
-                    ctx.beginPath();
-                    ctx.arc(leafX, leafY, bush.size * 0.3, 0, Math.PI * 2);
+                    ctx.ellipse(rock.x, rock.y, rock.size, rock.size * 0.7, 0, 0, Math.PI * 2);
                     ctx.fill();
-                }
-            });
-
-            // Draw flowers
-            backgroundDecorations.flowers.forEach(flower => {
-                // Draw petals
-                ctx.fillStyle = flower.color;
-                for (let p = 0; p < flower.petalCount; p++) {
-                    const angle = (Math.PI * 2 * p) / flower.petalCount;
-                    const petalX = flower.x + Math.cos(angle) * flower.size;
-                    const petalY = flower.y + Math.sin(angle) * flower.size;
+                    ctx.fillStyle = `rgba(130, 120, 110, ${0.4 + rock.shade})`;
                     ctx.beginPath();
-                    ctx.ellipse(petalX, petalY, flower.size * 0.8, flower.size * 0.5, angle, 0, Math.PI * 2);
+                    ctx.ellipse(rock.x - rock.size * 0.2, rock.y - rock.size * 0.2, rock.size * 0.5, rock.size * 0.35, 0, 0, Math.PI * 2);
                     ctx.fill();
-                }
-                // Draw center
-                ctx.fillStyle = '#FFD700';
-                ctx.beginPath();
-                ctx.arc(flower.x, flower.y, flower.size * 0.4, 0, Math.PI * 2);
-                ctx.fill();
-            });
+                });
+            }
 
-            // Draw trees (simple top-down view)
-            backgroundDecorations.trees.forEach(tree => {
-                // Shadow
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-                ctx.beginPath();
-                ctx.ellipse(tree.x + 5, tree.y + 5, tree.size, tree.size * 0.8, 0, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Tree canopy
-                const treeGradient = ctx.createRadialGradient(tree.x, tree.y, 0, tree.x, tree.y, tree.size);
-                treeGradient.addColorStop(0, '#228B22');
-                treeGradient.addColorStop(0.6, '#1a6b1a');
-                treeGradient.addColorStop(1, '#0d4d0d');
-                ctx.fillStyle = treeGradient;
-                ctx.beginPath();
-                ctx.arc(tree.x, tree.y, tree.size, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Add texture to tree
-                ctx.fillStyle = 'rgba(34, 139, 34, 0.5)';
-                for (let i = 0; i < 6; i++) {
-                    const angle = Math.random() * Math.PI * 2;
-                    const dist = Math.random() * tree.size * 0.7;
+            // Safely draw bushes
+            if (backgroundDecorations.bushes) {
+                backgroundDecorations.bushes.forEach(bush => {
+                    const bushGradient = ctx.createRadialGradient(bush.x, bush.y, 0, bush.x, bush.y, bush.size);
+                    bushGradient.addColorStop(0, '#2d6b2d');
+                    bushGradient.addColorStop(0.7, '#1e4d1e');
+                    bushGradient.addColorStop(1, 'rgba(30, 77, 30, 0)');
+                    ctx.fillStyle = bushGradient;
                     ctx.beginPath();
-                    ctx.arc(tree.x + Math.cos(angle) * dist, tree.y + Math.sin(angle) * dist, tree.size * 0.25, 0, Math.PI * 2);
+                    ctx.arc(bush.x, bush.y, bush.size, 0, Math.PI * 2);
                     ctx.fill();
-                }
-            });
+
+                    // Add leaf details
+                    for (let i = 0; i < 5; i++) {
+                        const angle = (Math.PI * 2 * i) / 5;
+                        const leafX = bush.x + Math.cos(angle) * bush.size * 0.6;
+                        const leafY = bush.y + Math.sin(angle) * bush.size * 0.6;
+                        ctx.fillStyle = '#3d8b3d';
+                        ctx.beginPath();
+                        ctx.arc(leafX, leafY, bush.size * 0.3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+            }
+
+            // Safely draw flowers
+            if (backgroundDecorations.flowers) {
+                backgroundDecorations.flowers.forEach(flower => {
+                    ctx.fillStyle = flower.color;
+                    for (let p = 0; p < flower.petalCount; p++) {
+                        const angle = (Math.PI * 2 * p) / flower.petalCount;
+                        const petalX = flower.x + Math.cos(angle) * flower.size;
+                        const petalY = flower.y + Math.sin(angle) * flower.size;
+                        ctx.beginPath();
+                        ctx.ellipse(petalX, petalY, flower.size * 0.8, flower.size * 0.5, angle, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.fillStyle = '#FFD700';
+                    ctx.beginPath();
+                    ctx.arc(flower.x, flower.y, flower.size * 0.4, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+
+            // Safely draw trees
+            if (backgroundDecorations.trees) {
+                backgroundDecorations.trees.forEach(tree => {
+                    // Shadow
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                    ctx.beginPath();
+                    ctx.ellipse(tree.x + 5, tree.y + 5, tree.size, tree.size * 0.8, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Tree canopy
+                    const treeGradient = ctx.createRadialGradient(tree.x, tree.y, 0, tree.x, tree.y, tree.size);
+                    treeGradient.addColorStop(0, '#228B22');
+                    treeGradient.addColorStop(0.6, '#1a6b1a');
+                    treeGradient.addColorStop(1, '#0d4d0d');
+                    ctx.fillStyle = treeGradient;
+                    ctx.beginPath();
+                    ctx.arc(tree.x, tree.y, tree.size, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Add texture to tree
+                    ctx.fillStyle = 'rgba(34, 139, 34, 0.5)';
+                    for (let i = 0; i < 6; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const dist = Math.random() * tree.size * 0.7;
+                        ctx.beginPath();
+                        ctx.arc(tree.x + Math.cos(angle) * dist, tree.y + Math.sin(angle) * dist, tree.size * 0.25, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+            }
         }
 
         // Draw enhanced path with better visuals
         function drawEnhancedPath(ctx, path) {
+            // Guard against empty path
+            if (!path || path.length === 0) return;
+
             // Draw path shadow
             ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
             ctx.lineWidth = 48;
@@ -1738,6 +1749,8 @@
             pathGradient.addColorStop(1, '#c9956a');
             ctx.strokeStyle = pathGradient;
             ctx.lineWidth = 44;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
             ctx.beginPath();
             path.forEach((point, index) => {
                 if (index === 0) ctx.moveTo(point.x, point.y);
@@ -1747,14 +1760,13 @@
 
             // Draw path border
             ctx.strokeStyle = '#8B7355';
-            ctx.lineWidth = 44;
-            ctx.setLineDash([0, 0]);
+            ctx.lineWidth = 2;
+            ctx.setLineDash([]);
             ctx.beginPath();
             path.forEach((point, index) => {
                 if (index === 0) ctx.moveTo(point.x, point.y);
                 else ctx.lineTo(point.x, point.y);
             });
-            ctx.lineWidth = 2;
             ctx.stroke();
 
             // Draw path inner line (worn track)
