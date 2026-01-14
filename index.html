@@ -4482,11 +4482,75 @@
                 const deltaTime = currentTime - gameState.lastFrameTime;
                 gameState.lastFrameTime = currentTime;
                 
-                // Draw enhanced background
-                drawEnhancedBackground(ctx, canvas.width, canvas.height);
+                // Clear canvas with gradient background
+                const bgGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                bgGradient.addColorStop(0, '#4a7c59');
+                bgGradient.addColorStop(0.5, '#3d6b4a');
+                bgGradient.addColorStop(1, '#2d5016');
+                ctx.fillStyle = bgGradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                // Draw enhanced path
-                drawEnhancedPath(ctx, gameState.path);
+                // Draw decorations (trees, bushes, flowers)
+                try {
+                    if (!backgroundDecorations) {
+                        backgroundDecorations = generateBackgroundDecorations(canvas.width, canvas.height);
+                    }
+                    if (backgroundDecorations) {
+                        // Trees
+                        if (backgroundDecorations.trees) {
+                            for (let i = 0; i < backgroundDecorations.trees.length; i++) {
+                                const tree = backgroundDecorations.trees[i];
+                                ctx.fillStyle = 'rgba(0,0,0,0.15)';
+                                ctx.beginPath();
+                                ctx.arc(tree.x + 3, tree.y + 3, tree.size, 0, Math.PI * 2);
+                                ctx.fill();
+                                ctx.fillStyle = '#1a6b1a';
+                                ctx.beginPath();
+                                ctx.arc(tree.x, tree.y, tree.size, 0, Math.PI * 2);
+                                ctx.fill();
+                                ctx.fillStyle = '#228B22';
+                                ctx.beginPath();
+                                ctx.arc(tree.x, tree.y, tree.size * 0.65, 0, Math.PI * 2);
+                                ctx.fill();
+                            }
+                        }
+                        // Bushes
+                        if (backgroundDecorations.bushes) {
+                            for (let i = 0; i < backgroundDecorations.bushes.length; i++) {
+                                const bush = backgroundDecorations.bushes[i];
+                                ctx.fillStyle = '#2d6b2d';
+                                ctx.beginPath();
+                                ctx.arc(bush.x, bush.y, bush.size, 0, Math.PI * 2);
+                                ctx.fill();
+                            }
+                        }
+                        // Flowers
+                        if (backgroundDecorations.flowers) {
+                            for (let i = 0; i < backgroundDecorations.flowers.length; i++) {
+                                const flower = backgroundDecorations.flowers[i];
+                                ctx.fillStyle = flower.color;
+                                ctx.beginPath();
+                                ctx.arc(flower.x, flower.y, flower.size, 0, Math.PI * 2);
+                                ctx.fill();
+                            }
+                        }
+                    }
+                } catch (e) { /* ignore decoration errors */ }
+
+                // Draw path
+                ctx.strokeStyle = '#d4a574';
+                ctx.lineWidth = 40;
+                ctx.lineCap = 'square';
+                ctx.lineJoin = 'miter';
+                ctx.beginPath();
+                gameState.path.forEach((point, index) => {
+                    if (index === 0) {
+                        ctx.moveTo(point.x, point.y);
+                    } else {
+                        ctx.lineTo(point.x, point.y);
+                    }
+                });
+                ctx.stroke();
                 
                 // Spawn enemies
                 if (gameState.waveActive) {
