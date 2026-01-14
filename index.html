@@ -539,6 +539,29 @@
             transform: scale(1.05);
         }
 
+        .evolution-pokemon.mega.available:hover {
+            transform: translateY(-8px) scale(1.1);
+            border: 3px solid #FFD700;
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.8), 0 0 30px rgba(255, 105, 180, 0.6);
+            z-index: 10;
+        }
+
+        .evolution-pokemon.mega.available {
+            cursor: pointer;
+            border: 2px solid #FFD700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5), 0 0 25px rgba(255, 105, 180, 0.4);
+            animation: mega-glow 1.5s ease-in-out infinite;
+        }
+
+        @keyframes mega-glow {
+            0%, 100% {
+                box-shadow: 0 0 15px rgba(255, 215, 0, 0.5), 0 0 25px rgba(255, 105, 180, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 105, 180, 0.7);
+            }
+        }
+
         .evolution-pokemon.current {
             border-color: #4CAF50;
             box-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
@@ -587,6 +610,28 @@
             color: #FF69B4;
             font-size: 9px;
             font-weight: bold;
+        }
+
+        .evolve-hint {
+            color: #FFD700;
+            font-size: 8px;
+            font-weight: bold;
+            margin-top: 4px;
+            padding: 2px 6px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 4px;
+            animation: hint-pulse 1s ease-in-out infinite;
+            white-space: nowrap;
+        }
+
+        @keyframes hint-pulse {
+            0%, 100% { opacity: 0.7; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+        }
+
+        .evolution-pokemon.mega.available:hover .evolve-hint {
+            background: rgba(255, 215, 0, 0.3);
+            color: #FFFFFF;
         }
 
         .upgrade-section {
@@ -3158,83 +3203,187 @@
 
             // THUNDER PUNCH - Electric fist strike with lightning effect
             updateThunderPunch() {
-                this.maxFrames = 25;
+                this.maxFrames = 30;
+                const impactRadius = 120; // Large AoE
 
-                // Phase 1: Electric charge on fist
-                if (this.frame < 8) {
-                    for (let i = 0; i < 5; i++) {
+                // Phase 1: Electric charge on fist (bigger effect)
+                if (this.frame < 10) {
+                    for (let i = 0; i < 8; i++) {
                         const sparkAngle = Math.random() * Math.PI * 2;
-                        const dist = 15 + Math.random() * 10;
+                        const dist = 20 + Math.random() * 15;
                         this.particles.push({
                             x: this.tower.x + Math.cos(sparkAngle) * dist,
                             y: this.tower.y + Math.sin(sparkAngle) * dist,
-                            vx: (Math.random() - 0.5) * 4,
-                            vy: (Math.random() - 0.5) * 4,
-                            size: 3 + Math.random() * 3,
+                            vx: (Math.random() - 0.5) * 5,
+                            vy: (Math.random() - 0.5) * 5,
+                            size: 4 + Math.random() * 4,
                             color: `rgba(255, 255, ${100 + Math.random() * 155}, 0.9)`,
-                            life: 8
-                        });
-                    }
-                }
-
-                // Phase 2: Quick dash to target
-                if (this.frame >= 8 && this.frame < 15) {
-                    const progress = (this.frame - 8) / 7;
-                    const currentX = this.tower.x + (this.target.x - this.tower.x) * progress;
-                    const currentY = this.tower.y + (this.target.y - this.tower.y) * progress;
-
-                    // Electric trail
-                    for (let i = 0; i < 3; i++) {
-                        this.particles.push({
-                            x: currentX + (Math.random() - 0.5) * 15,
-                            y: currentY + (Math.random() - 0.5) * 15,
-                            size: 5 + Math.random() * 4,
-                            color: `rgba(255, 255, 0, 0.8)`,
                             life: 10
                         });
                     }
+
+                    // Growing electric orb on tower
+                    const orbSize = 10 + this.frame * 3;
+                    for (let i = 0; i < 3; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        this.particles.push({
+                            x: this.tower.x + Math.cos(angle) * orbSize * 0.5,
+                            y: this.tower.y + Math.sin(angle) * orbSize * 0.5,
+                            size: 8,
+                            color: `rgba(255, 255, 0, 0.6)`,
+                            life: 5
+                        });
+                    }
                 }
 
-                // Phase 3: Impact with lightning burst
-                if (this.frame === 12) {
-                    soundManager.playSound('thunder');
+                // Phase 2: Quick dash to target with electric trail
+                if (this.frame >= 10 && this.frame < 16) {
+                    const progress = (this.frame - 10) / 6;
+                    const currentX = this.tower.x + (this.target.x - this.tower.x) * progress;
+                    const currentY = this.tower.y + (this.target.y - this.tower.y) * progress;
 
-                    // Lightning burst from impact
-                    for (let bolt = 0; bolt < 6; bolt++) {
-                        const boltAngle = (Math.PI * 2 * bolt) / 6;
+                    // Thick electric trail
+                    for (let i = 0; i < 6; i++) {
+                        this.particles.push({
+                            x: currentX + (Math.random() - 0.5) * 25,
+                            y: currentY + (Math.random() - 0.5) * 25,
+                            size: 6 + Math.random() * 5,
+                            color: `rgba(255, 255, 0, 0.8)`,
+                            life: 12
+                        });
+                    }
+
+                    // Lightning crackle along path
+                    if (this.frame % 2 === 0) {
                         const points = this.generateLightningPath(
-                            this.target.x, this.target.y,
-                            this.target.x + Math.cos(boltAngle) * 60,
-                            this.target.y + Math.sin(boltAngle) * 60
+                            currentX - 20, currentY,
+                            currentX + 20, currentY
                         );
                         points.forEach(point => {
                             this.particles.push({
                                 x: point.x,
                                 y: point.y,
-                                size: 5,
-                                color: `rgba(255, 255, 100, 0.9)`,
-                                life: 12
+                                size: 4,
+                                color: `rgba(255, 255, 200, 0.9)`,
+                                life: 8
                             });
                         });
                     }
+                }
 
-                    // Impact sparks
-                    for (let i = 0; i < 20; i++) {
+                // Phase 3: Massive impact with AoE lightning burst
+                if (this.frame === 15) {
+                    soundManager.playSound('thunder');
+
+                    // Large lightning bolts radiating outward (8 directions, longer)
+                    for (let bolt = 0; bolt < 8; bolt++) {
+                        const boltAngle = (Math.PI * 2 * bolt) / 8;
+                        const boltLength = impactRadius;
+                        const points = this.generateLightningPath(
+                            this.target.x, this.target.y,
+                            this.target.x + Math.cos(boltAngle) * boltLength,
+                            this.target.y + Math.sin(boltAngle) * boltLength
+                        );
+                        points.forEach(point => {
+                            this.particles.push({
+                                x: point.x,
+                                y: point.y,
+                                size: 7,
+                                color: `rgba(255, 255, 100, 0.95)`,
+                                life: 18
+                            });
+                        });
+
+                        // Secondary branching bolts
+                        if (bolt % 2 === 0) {
+                            const branchStart = boltLength * 0.5;
+                            const branchX = this.target.x + Math.cos(boltAngle) * branchStart;
+                            const branchY = this.target.y + Math.sin(boltAngle) * branchStart;
+                            const branchPoints = this.generateLightningPath(
+                                branchX, branchY,
+                                branchX + Math.cos(boltAngle + 0.5) * 50,
+                                branchY + Math.sin(boltAngle + 0.5) * 50
+                            );
+                            branchPoints.forEach(point => {
+                                this.particles.push({
+                                    x: point.x,
+                                    y: point.y,
+                                    size: 4,
+                                    color: `rgba(255, 255, 150, 0.8)`,
+                                    life: 12
+                                });
+                            });
+                        }
+                    }
+
+                    // Massive impact sparks
+                    for (let i = 0; i < 35; i++) {
                         const angle = Math.random() * Math.PI * 2;
+                        const speed = 4 + Math.random() * 6;
                         this.particles.push({
                             x: this.target.x,
                             y: this.target.y,
-                            vx: Math.cos(angle) * (3 + Math.random() * 4),
-                            vy: Math.sin(angle) * (3 + Math.random() * 4),
-                            size: 4 + Math.random() * 4,
+                            vx: Math.cos(angle) * speed,
+                            vy: Math.sin(angle) * speed,
+                            size: 5 + Math.random() * 5,
                             color: `rgba(255, 255, ${150 + Math.random() * 105}, 1)`,
-                            life: 15
+                            life: 18
                         });
                     }
 
-                    if (this.target) {
-                        this.damageEnemy(this.target);
-                        this.target.applyStatus('paralyze', 90);
+                    // Electric shockwave ring
+                    for (let ring = 0; ring < 2; ring++) {
+                        for (let i = 0; i < 20; i++) {
+                            const angle = (Math.PI * 2 * i) / 20;
+                            const ringDist = 30 + ring * 40;
+                            this.particles.push({
+                                x: this.target.x + Math.cos(angle) * ringDist,
+                                y: this.target.y + Math.sin(angle) * ringDist,
+                                vx: Math.cos(angle) * 3,
+                                vy: Math.sin(angle) * 3,
+                                size: 8 - ring * 2,
+                                color: `rgba(255, 255, 0, ${0.8 - ring * 0.2})`,
+                                life: 15
+                            });
+                        }
+                    }
+
+                    // Damage all enemies in AoE radius
+                    gameState.enemies.forEach(enemy => {
+                        const dist = Math.hypot(enemy.x - this.target.x, enemy.y - this.target.y);
+                        if (dist <= impactRadius) {
+                            // Damage falloff based on distance
+                            const damageMult = dist < 40 ? 1.0 : (1.0 - (dist - 40) / (impactRadius - 40) * 0.5);
+                            this.damageEnemy(enemy, damageMult);
+                            enemy.applyStatus('paralyze', 60);
+
+                            // Electric hit effect on each enemy
+                            for (let j = 0; j < 5; j++) {
+                                this.particles.push({
+                                    x: enemy.x + (Math.random() - 0.5) * 20,
+                                    y: enemy.y + (Math.random() - 0.5) * 20,
+                                    size: 5,
+                                    color: '#FFFF00',
+                                    life: 10
+                                });
+                            }
+                        }
+                    });
+                }
+
+                // Lingering electric aftermath
+                if (this.frame > 15 && this.frame < 25) {
+                    const fadeProgress = (this.frame - 15) / 10;
+                    for (let i = 0; i < 3; i++) {
+                        const sparkAngle = Math.random() * Math.PI * 2;
+                        const sparkDist = Math.random() * impactRadius;
+                        this.particles.push({
+                            x: this.target.x + Math.cos(sparkAngle) * sparkDist,
+                            y: this.target.y + Math.sin(sparkAngle) * sparkDist,
+                            size: 4 * (1 - fadeProgress),
+                            color: `rgba(255, 255, 100, ${0.5 * (1 - fadeProgress)})`,
+                            life: 8
+                        });
                     }
                 }
             }
@@ -3586,31 +3735,136 @@
             }
 
             updateDragonClaw() {
+                this.maxFrames = 25;
                 const angle = Math.atan2(this.target.y - this.tower.y, this.target.x - this.tower.x);
-                
+                const clawLength = 160; // Bigger AoE
+                const clawWidth = 120; // Wide arc spread
+
+                // Wind-up phase with dragon energy gathering
+                if (this.frame < 8) {
+                    for (let i = 0; i < 3; i++) {
+                        const sparkAngle = Math.random() * Math.PI * 2;
+                        const dist = 20 + Math.random() * 15;
+                        this.particles.push({
+                            x: this.tower.x + Math.cos(sparkAngle) * dist,
+                            y: this.tower.y + Math.sin(sparkAngle) * dist,
+                            vx: -Math.cos(sparkAngle) * 2,
+                            vy: -Math.sin(sparkAngle) * 2,
+                            size: 4 + Math.random() * 3,
+                            color: `rgba(148, 0, 211, ${0.6 + Math.random() * 0.4})`,
+                            life: 10
+                        });
+                    }
+                }
+
+                // Main slash - 3 curved claw arcs like a velociraptor/wolf
                 if (this.frame === 10) {
+                    soundManager.playSound('slash');
+
+                    // Create 3 curved claw marks
                     for (let claw = -1; claw <= 1; claw++) {
-                        const clawAngle = angle + claw * 0.3;
-                        const distance = 100;
-                        
-                        for (let d = 0; d < distance; d += 5) {
+                        const clawOffset = claw * 25; // Space between claws
+                        const arcStart = -0.5; // Start of arc curve
+                        const arcEnd = 0.5; // End of arc curve
+
+                        // Draw curved arc for each claw
+                        for (let t = 0; t <= 1; t += 0.03) {
+                            // Bezier-like curve for claw arc
+                            const curveT = arcStart + (arcEnd - arcStart) * t;
+                            const distance = clawLength * (0.3 + t * 0.7); // Claw grows longer
+
+                            // Perpendicular offset for claw width
+                            const perpAngle = angle + Math.PI / 2;
+                            const curveOffset = Math.sin(curveT * Math.PI) * clawWidth * 0.3;
+
+                            const clawX = this.tower.x +
+                                Math.cos(angle) * distance +
+                                Math.cos(perpAngle) * (clawOffset + curveOffset);
+                            const clawY = this.tower.y +
+                                Math.sin(angle) * distance +
+                                Math.sin(perpAngle) * (clawOffset + curveOffset);
+
+                            // Claw particle - tapers at the end
+                            const clawSize = 14 * (1 - t * 0.6); // Taper from thick to thin
                             this.particles.push({
-                                x: this.tower.x + Math.cos(clawAngle) * d,
-                                y: this.tower.y + Math.sin(clawAngle) * d,
-                                size: 12 - d / 15,
-                                color: `rgba(${200 + Math.random() * 55}, 50, ${100 + Math.random() * 100}, ${1 - d / distance})`,
-                                life: 20
+                                x: clawX,
+                                y: clawY,
+                                size: clawSize,
+                                color: `rgba(148, 0, 211, ${0.9 - t * 0.3})`,
+                                life: 18 - t * 8
+                            });
+
+                            // White highlight on claw edge
+                            if (t > 0.2) {
+                                this.particles.push({
+                                    x: clawX + (Math.random() - 0.5) * 3,
+                                    y: clawY + (Math.random() - 0.5) * 3,
+                                    size: clawSize * 0.4,
+                                    color: `rgba(255, 255, 255, ${0.7 - t * 0.5})`,
+                                    life: 12
+                                });
+                            }
+                        }
+
+                        // Sharp claw tip
+                        const tipX = this.tower.x + Math.cos(angle) * clawLength + Math.cos(angle + Math.PI/2) * clawOffset;
+                        const tipY = this.tower.y + Math.sin(angle) * clawLength + Math.sin(angle + Math.PI/2) * clawOffset;
+                        for (let spark = 0; spark < 5; spark++) {
+                            this.particles.push({
+                                x: tipX,
+                                y: tipY,
+                                vx: Math.cos(angle) * (3 + Math.random() * 4),
+                                vy: Math.sin(angle) * (3 + Math.random() * 4),
+                                size: 6 + Math.random() * 4,
+                                color: '#E040FB',
+                                life: 15
                             });
                         }
-                        
-                        gameState.enemies.forEach(enemy => {
-                            const endX = this.tower.x + Math.cos(clawAngle) * distance;
-                            const endY = this.tower.y + Math.sin(clawAngle) * distance;
-                            const dist = this.distanceToLine(enemy.x, enemy.y, this.tower.x, this.tower.y, endX, endY);
-                            
-                            if (dist <= 15) {
+                    }
+
+                    // Damage all enemies in the wide claw arc AoE
+                    gameState.enemies.forEach(enemy => {
+                        const dx = enemy.x - this.tower.x;
+                        const dy = enemy.y - this.tower.y;
+                        const dist = Math.hypot(dx, dy);
+
+                        // Check if enemy is in the cone of the claw attack
+                        if (dist <= clawLength + 30) {
+                            const enemyAngle = Math.atan2(dy, dx);
+                            let angleDiff = Math.abs(enemyAngle - angle);
+                            if (angleDiff > Math.PI) angleDiff = Math.PI * 2 - angleDiff;
+
+                            // Wide cone (about 90 degrees total)
+                            if (angleDiff <= 0.8) {
                                 this.damageEnemy(enemy);
+                                // Slash impact effect on enemy
+                                for (let i = 0; i < 8; i++) {
+                                    this.particles.push({
+                                        x: enemy.x + (Math.random() - 0.5) * 30,
+                                        y: enemy.y + (Math.random() - 0.5) * 30,
+                                        vx: (Math.random() - 0.5) * 6,
+                                        vy: (Math.random() - 0.5) * 6,
+                                        size: 5 + Math.random() * 4,
+                                        color: '#9400D3',
+                                        life: 12
+                                    });
+                                }
                             }
+                        }
+                    });
+                }
+
+                // Lingering energy trails
+                if (this.frame > 10 && this.frame < 18) {
+                    const fadeProgress = (this.frame - 10) / 8;
+                    for (let i = 0; i < 3; i++) {
+                        const trailDist = 60 + Math.random() * 80;
+                        this.particles.push({
+                            x: this.tower.x + Math.cos(angle) * trailDist + (Math.random() - 0.5) * 50,
+                            y: this.tower.y + Math.sin(angle) * trailDist + (Math.random() - 0.5) * 50,
+                            size: 6 * (1 - fadeProgress),
+                            color: `rgba(148, 0, 211, ${0.4 * (1 - fadeProgress)})`,
+                            life: 8
                         });
                     }
                 }
@@ -4513,32 +4767,109 @@
 
             // --- OUTRAGE / RAMPAGE ---
             updateRampageAttack() {
-                this.maxFrames = 30;
-                const skillData = skillDatabase[this.attackName] || {};
+                this.maxFrames = 40;
+                const rageRadius = 180; // Large AoE radius
 
-                // Rapid hits in area
-                if (this.frame % 6 === 0 && this.frame < 24) {
-                    const hitX = this.tower.x + (Math.random() - 0.5) * 100;
-                    const hitY = this.tower.y + (Math.random() - 0.5) * 100;
+                // Constant rage aura around tower
+                if (this.frame < 32) {
+                    for (let i = 0; i < 4; i++) {
+                        const auraAngle = Math.random() * Math.PI * 2;
+                        const auraDist = 30 + Math.random() * 50;
+                        this.particles.push({
+                            x: this.tower.x + Math.cos(auraAngle) * auraDist,
+                            y: this.tower.y + Math.sin(auraAngle) * auraDist,
+                            vx: Math.cos(auraAngle) * 1.5,
+                            vy: Math.sin(auraAngle) * 1.5 - 1,
+                            size: 6 + Math.random() * 4,
+                            color: `rgba(255, ${50 + Math.random() * 50}, 0, 0.7)`,
+                            life: 15
+                        });
+                    }
+                }
 
-                    // Impact effect
-                    for (let i = 0; i < 15; i++) {
+                // Rapid hits in large area - 6 hits total
+                if (this.frame % 5 === 0 && this.frame < 32) {
+                    const hitAngle = (this.frame / 5) * (Math.PI * 2 / 6);
+                    const hitDist = 60 + Math.random() * (rageRadius - 60);
+                    const hitX = this.tower.x + Math.cos(hitAngle) * hitDist;
+                    const hitY = this.tower.y + Math.sin(hitAngle) * hitDist;
+
+                    soundManager.playSound('hit');
+
+                    // Large impact explosion
+                    for (let i = 0; i < 20; i++) {
                         const angle = Math.random() * Math.PI * 2;
+                        const speed = 3 + Math.random() * 5;
                         this.particles.push({
                             x: hitX,
                             y: hitY,
-                            vx: Math.cos(angle) * 4,
-                            vy: Math.sin(angle) * 4,
-                            size: 8,
-                            color: `rgba(255, 0, 0, 0.8)`,
-                            life: 12
+                            vx: Math.cos(angle) * speed,
+                            vy: Math.sin(angle) * speed,
+                            size: 10 + Math.random() * 6,
+                            color: `rgba(255, ${Math.random() * 100}, 0, 0.9)`,
+                            life: 15
                         });
                     }
 
-                    // Damage nearby enemies
+                    // Ground crack effect
+                    for (let crack = 0; crack < 4; crack++) {
+                        const crackAngle = (Math.PI * 2 * crack) / 4 + Math.random() * 0.5;
+                        for (let d = 0; d < 50; d += 8) {
+                            this.particles.push({
+                                x: hitX + Math.cos(crackAngle) * d,
+                                y: hitY + Math.sin(crackAngle) * d,
+                                size: 6 - d / 12,
+                                color: `rgba(139, 69, 19, ${0.8 - d / 60})`,
+                                life: 20
+                            });
+                        }
+                    }
+
+                    // Damage enemies in hit radius (larger radius per hit)
                     gameState.enemies.forEach(enemy => {
-                        if (Math.hypot(enemy.x - hitX, enemy.y - hitY) <= 40) {
-                            this.damageEnemy(enemy, 0.4);
+                        if (Math.hypot(enemy.x - hitX, enemy.y - hitY) <= 70) {
+                            this.damageEnemy(enemy, 0.35);
+                            // Hit effect on enemy
+                            for (let j = 0; j < 5; j++) {
+                                this.particles.push({
+                                    x: enemy.x + (Math.random() - 0.5) * 20,
+                                    y: enemy.y + (Math.random() - 0.5) * 20,
+                                    vx: (Math.random() - 0.5) * 4,
+                                    vy: -2 - Math.random() * 3,
+                                    size: 6,
+                                    color: '#FF4500',
+                                    life: 10
+                                });
+                            }
+                        }
+                    });
+                }
+
+                // Final rage burst - damages all enemies in full AoE
+                if (this.frame === 34) {
+                    soundManager.playSound('explosion');
+
+                    // Massive expanding ring
+                    for (let ring = 0; ring < 3; ring++) {
+                        const ringRadius = 40 + ring * 50;
+                        for (let i = 0; i < 24; i++) {
+                            const angle = (Math.PI * 2 * i) / 24;
+                            this.particles.push({
+                                x: this.tower.x + Math.cos(angle) * ringRadius,
+                                y: this.tower.y + Math.sin(angle) * ringRadius,
+                                vx: Math.cos(angle) * 4,
+                                vy: Math.sin(angle) * 4,
+                                size: 12 - ring * 3,
+                                color: `rgba(255, 0, 0, ${0.9 - ring * 0.2})`,
+                                life: 20
+                            });
+                        }
+                    }
+
+                    // Damage all enemies in large radius
+                    gameState.enemies.forEach(enemy => {
+                        if (Math.hypot(enemy.x - this.tower.x, enemy.y - this.tower.y) <= rageRadius) {
+                            this.damageEnemy(enemy, 0.5);
                         }
                     });
                 }
@@ -5879,11 +6210,19 @@
                         const indicator = document.createElement('div');
                         indicator.className = 'mega-indicator';
                         indicator.textContent = 'MEGA';
-                        
+
                         megaDiv.appendChild(sprite);
                         megaDiv.appendChild(name);
                         megaDiv.appendChild(indicator);
-                        
+
+                        // Add "Click to evolve" hint for available mega evolutions
+                        if (!tower.isMegaEvolved && tower.evolutionStage === regularEvolutions.length - 1 && gameState.megaStones > 0) {
+                            const evolveHint = document.createElement('div');
+                            evolveHint.className = 'evolve-hint';
+                            evolveHint.textContent = '⬆ CLICK TO EVOLVE';
+                            megaDiv.appendChild(evolveHint);
+                        }
+
                         megaDiv.onclick = () => {
                             if (!tower.isMegaEvolved && tower.evolutionStage === regularEvolutions.length - 1 && gameState.megaStones > 0) {
                                 megaEvolveTower(idx);
