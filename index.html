@@ -1547,6 +1547,9 @@
             'Heat Wave': { type: 'fire', dmgMult: 1.1, desc: 'Wave of heat hits all', effect: 'wave', color: '#FF6347' },
             'Blaze Kick': { type: 'fire', dmgMult: 1.3, desc: 'Flaming kick attack', effect: 'melee', color: '#FF4500' },
             'Overheat': { type: 'fire', dmgMult: 1.8, desc: 'Maximum power blast', effect: 'beam', color: '#FF0000' },
+            'Flare Blitz': { type: 'fire', dmgMult: 1.6, desc: 'Blazing charge attack', effect: 'dash', status: 'burn', color: '#FF4500' },
+            'Blast Burn': { type: 'fire', dmgMult: 2.0, desc: 'Ultimate fire devastation', effect: 'explosion', status: 'burn', color: '#FF0000' },
+            'Thunder Punch': { type: 'electric', dmgMult: 1.2, desc: 'Electric fist strike', effect: 'melee', status: 'paralyze', color: '#FFD700' },
 
             // Water skills
             'Bubble': { type: 'water', dmgMult: 0.7, desc: 'Bubble projectiles', effect: 'projectile', color: '#4FC3F7' },
@@ -1877,8 +1880,10 @@
                     {dexId: 4, name: 'Charmander', level: 1, attack: 'Ember'},
                     {dexId: 5, name: 'Charmeleon', level: 16, attack: 'Fire Fang'},
                     {dexId: 6, name: 'Charizard', level: 36, attack: 'Flamethrower', types: ['fire', 'flying']},
-                    {dexId: 6, name: 'Mega Charizard X', level: 50, attack: 'Dragon Claw', mega: true, types: ['fire', 'dragon']},
-                    {dexId: 6, name: 'Mega Charizard Y', level: 50, attack: 'Fire Blast', mega: true, types: ['fire', 'flying']}
+                    {dexId: 6, name: 'Mega Charizard X', level: 50, attack: 'Dragon Claw', mega: true, types: ['fire', 'dragon'],
+                        skills: ['Flare Blitz', 'Dragon Claw', 'Outrage', 'Thunder Punch']},
+                    {dexId: 6, name: 'Mega Charizard Y', level: 50, attack: 'Blast Burn', mega: true, types: ['fire', 'flying'],
+                        skills: ['Blast Burn', 'Heat Wave', 'Solar Beam', 'Air Slash']}
                 ]
             },
             {
@@ -2205,10 +2210,17 @@
                         this.updateMeleeAttack();
                         break;
                     case 'Flamethrower':
-                    case 'Blast Burn':
                     case 'Inferno':
                     case 'Overheat':
                         this.updateFlamethrower();
+                        break;
+                    case 'Flare Blitz':
+                        // Mega Charizard X signature - blazing fire dash
+                        this.updateFlareBlitz();
+                        break;
+                    case 'Blast Burn':
+                        // Mega Charizard Y signature - ultimate fire attack
+                        this.updateBlastBurn();
                         break;
                     case 'Fire Blast':
                         this.updateExplosionAttack();
@@ -2218,6 +2230,10 @@
                         break;
                     case 'Will-O-Wisp':
                         this.updateWillOWisp();
+                        break;
+                    case 'Thunder Punch':
+                        // Mega Charizard X - electric melee
+                        this.updateThunderPunch();
                         break;
 
                     // === WATER SKILLS ===
@@ -2943,6 +2959,281 @@
                         life: 100,
                         homing: true
                     });
+                }
+            }
+
+            // === MEGA CHARIZARD X SKILL ANIMATIONS ===
+
+            // FLARE BLITZ - Blazing fire charge that engulfs Charizard
+            updateFlareBlitz() {
+                this.maxFrames = 35;
+                const angle = Math.atan2(this.target.y - this.tower.y, this.target.x - this.tower.x);
+
+                // Phase 1: Charizard ignites with blue-white flames
+                if (this.frame < 10) {
+                    for (let i = 0; i < 8; i++) {
+                        const flameAngle = Math.random() * Math.PI * 2;
+                        this.particles.push({
+                            x: this.tower.x + Math.cos(flameAngle) * 20,
+                            y: this.tower.y + Math.sin(flameAngle) * 20,
+                            vx: Math.cos(flameAngle) * 2,
+                            vy: Math.sin(flameAngle) * 2 - 2,
+                            size: 8 + Math.random() * 6,
+                            color: `rgba(${100 + Math.random() * 155}, ${150 + Math.random() * 100}, 255, 0.9)`,
+                            life: 12
+                        });
+                    }
+                }
+
+                // Phase 2: Blazing charge trail
+                if (this.frame >= 10 && this.frame < 25) {
+                    const progress = (this.frame - 10) / 15;
+                    const currentX = this.tower.x + (this.target.x - this.tower.x) * progress;
+                    const currentY = this.tower.y + (this.target.y - this.tower.y) * progress;
+
+                    // Intense flame trail
+                    for (let i = 0; i < 10; i++) {
+                        const spread = (Math.random() - 0.5) * 30;
+                        this.particles.push({
+                            x: currentX + Math.cos(angle + Math.PI) * spread,
+                            y: currentY + Math.sin(angle + Math.PI) * spread,
+                            vx: -Math.cos(angle) * 3 + (Math.random() - 0.5) * 2,
+                            vy: -Math.sin(angle) * 3 + (Math.random() - 0.5) * 2,
+                            size: 10 + Math.random() * 8,
+                            color: i < 5
+                                ? `rgba(100, 200, 255, ${0.9 - progress * 0.3})` // Blue-white core
+                                : `rgba(255, ${100 + Math.random() * 100}, 0, ${0.8 - progress * 0.2})`, // Orange outer
+                            life: 15
+                        });
+                    }
+                }
+
+                // Phase 3: Impact explosion
+                if (this.frame === 20) {
+                    soundManager.playSound('explosion');
+
+                    // Blue fire explosion
+                    for (let i = 0; i < 40; i++) {
+                        const burstAngle = Math.random() * Math.PI * 2;
+                        const speed = 4 + Math.random() * 6;
+                        this.particles.push({
+                            x: this.target.x,
+                            y: this.target.y,
+                            vx: Math.cos(burstAngle) * speed,
+                            vy: Math.sin(burstAngle) * speed,
+                            size: 8 + Math.random() * 10,
+                            color: Math.random() > 0.5
+                                ? `rgba(100, 180, 255, 0.9)`
+                                : `rgba(255, ${50 + Math.random() * 150}, 0, 0.9)`,
+                            life: 20
+                        });
+                    }
+
+                    // AOE damage with burn
+                    gameState.enemies.forEach(enemy => {
+                        if (Math.hypot(enemy.x - this.target.x, enemy.y - this.target.y) <= 80) {
+                            this.damageEnemy(enemy);
+                            enemy.applyStatus('burn', 120);
+                        }
+                    });
+                }
+            }
+
+            // BLAST BURN - Mega Charizard Y's ultimate fire devastation
+            updateBlastBurn() {
+                this.maxFrames = 55;
+
+                // Phase 1: Intense heat gathering - air distortion effect
+                if (this.frame < 20) {
+                    const intensity = this.frame / 20;
+
+                    // Heat shimmer particles around Charizard
+                    for (let i = 0; i < 6; i++) {
+                        const heatAngle = (Math.PI * 2 * i) / 6 + this.frame * 0.2;
+                        const dist = 40 - intensity * 15;
+                        this.particles.push({
+                            x: this.tower.x + Math.cos(heatAngle) * dist,
+                            y: this.tower.y + Math.sin(heatAngle) * dist,
+                            vx: -Math.cos(heatAngle) * 2,
+                            vy: -Math.sin(heatAngle) * 2 - 1,
+                            size: 6 + intensity * 8,
+                            color: `rgba(255, ${200 - intensity * 100}, 0, ${0.5 + intensity * 0.3})`,
+                            life: 12
+                        });
+                    }
+
+                    // Central fire building
+                    this.particles.push({
+                        x: this.tower.x + (Math.random() - 0.5) * 15,
+                        y: this.tower.y + (Math.random() - 0.5) * 15,
+                        size: 15 + intensity * 20,
+                        color: `rgba(255, ${100 + intensity * 50}, 0, ${0.3 + intensity * 0.4})`,
+                        life: 5
+                    });
+                }
+
+                // Phase 2: Massive fire beam launch
+                if (this.frame >= 20 && this.frame < 35) {
+                    const beamProgress = (this.frame - 20) / 15;
+                    const angle = Math.atan2(this.target.y - this.tower.y, this.target.x - this.tower.x);
+                    const beamLength = 300 * beamProgress;
+
+                    // Wide devastating beam
+                    for (let width = -2; width <= 2; width++) {
+                        const offsetAngle = angle + width * 0.08;
+                        for (let d = 0; d < beamLength; d += 15) {
+                            this.particles.push({
+                                x: this.tower.x + Math.cos(offsetAngle) * d + (Math.random() - 0.5) * 15,
+                                y: this.tower.y + Math.sin(offsetAngle) * d + (Math.random() - 0.5) * 15,
+                                size: width === 0 ? 18 : 12,
+                                color: width === 0
+                                    ? `rgba(255, 255, 200, ${1 - d / 350})`  // White-hot center
+                                    : `rgba(255, ${100 + Math.random() * 100}, 0, ${0.9 - d / 400})`, // Orange edges
+                                life: 8
+                            });
+                        }
+                    }
+                }
+
+                // Phase 3: Ground eruption at target
+                if (this.frame === 30) {
+                    soundManager.playSound('explosion');
+
+                    // Massive explosion
+                    for (let i = 0; i < 60; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const speed = 3 + Math.random() * 8;
+                        this.particles.push({
+                            x: this.target.x + (Math.random() - 0.5) * 50,
+                            y: this.target.y + (Math.random() - 0.5) * 50,
+                            vx: Math.cos(angle) * speed,
+                            vy: Math.sin(angle) * speed - 2,
+                            size: 10 + Math.random() * 15,
+                            color: `rgba(255, ${Math.random() * 150}, 0, 1)`,
+                            life: 25
+                        });
+                    }
+
+                    // Rising fire pillars
+                    for (let pillar = 0; pillar < 5; pillar++) {
+                        const pillarX = this.target.x + (Math.random() - 0.5) * 100;
+                        const pillarY = this.target.y + (Math.random() - 0.5) * 100;
+                        for (let h = 0; h < 40; h += 5) {
+                            this.particles.push({
+                                x: pillarX + (Math.random() - 0.5) * 10,
+                                y: pillarY - h,
+                                vy: -3 - Math.random() * 3,
+                                size: 12 - h / 5,
+                                color: `rgba(255, ${50 + h * 2}, 0, ${1 - h / 50})`,
+                                life: 20
+                            });
+                        }
+                    }
+
+                    // Large AOE damage with burn
+                    gameState.enemies.forEach(enemy => {
+                        if (Math.hypot(enemy.x - this.target.x, enemy.y - this.target.y) <= 120) {
+                            this.damageEnemy(enemy);
+                            enemy.applyStatus('burn', 180);
+                        }
+                    });
+                }
+
+                // Aftermath - lingering flames
+                if (this.frame > 35 && this.frame < 50) {
+                    if (this.frame % 3 === 0) {
+                        this.particles.push({
+                            x: this.target.x + (Math.random() - 0.5) * 80,
+                            y: this.target.y + (Math.random() - 0.5) * 80,
+                            vy: -2 - Math.random() * 2,
+                            size: 8 + Math.random() * 6,
+                            color: `rgba(255, ${50 + Math.random() * 100}, 0, ${0.6 - (this.frame - 35) * 0.03})`,
+                            life: 15
+                        });
+                    }
+                }
+            }
+
+            // THUNDER PUNCH - Electric fist strike with lightning effect
+            updateThunderPunch() {
+                this.maxFrames = 25;
+
+                // Phase 1: Electric charge on fist
+                if (this.frame < 8) {
+                    for (let i = 0; i < 5; i++) {
+                        const sparkAngle = Math.random() * Math.PI * 2;
+                        const dist = 15 + Math.random() * 10;
+                        this.particles.push({
+                            x: this.tower.x + Math.cos(sparkAngle) * dist,
+                            y: this.tower.y + Math.sin(sparkAngle) * dist,
+                            vx: (Math.random() - 0.5) * 4,
+                            vy: (Math.random() - 0.5) * 4,
+                            size: 3 + Math.random() * 3,
+                            color: `rgba(255, 255, ${100 + Math.random() * 155}, 0.9)`,
+                            life: 8
+                        });
+                    }
+                }
+
+                // Phase 2: Quick dash to target
+                if (this.frame >= 8 && this.frame < 15) {
+                    const progress = (this.frame - 8) / 7;
+                    const currentX = this.tower.x + (this.target.x - this.tower.x) * progress;
+                    const currentY = this.tower.y + (this.target.y - this.tower.y) * progress;
+
+                    // Electric trail
+                    for (let i = 0; i < 3; i++) {
+                        this.particles.push({
+                            x: currentX + (Math.random() - 0.5) * 15,
+                            y: currentY + (Math.random() - 0.5) * 15,
+                            size: 5 + Math.random() * 4,
+                            color: `rgba(255, 255, 0, 0.8)`,
+                            life: 10
+                        });
+                    }
+                }
+
+                // Phase 3: Impact with lightning burst
+                if (this.frame === 12) {
+                    soundManager.playSound('thunder');
+
+                    // Lightning burst from impact
+                    for (let bolt = 0; bolt < 6; bolt++) {
+                        const boltAngle = (Math.PI * 2 * bolt) / 6;
+                        const points = this.generateLightningPath(
+                            this.target.x, this.target.y,
+                            this.target.x + Math.cos(boltAngle) * 60,
+                            this.target.y + Math.sin(boltAngle) * 60
+                        );
+                        points.forEach(point => {
+                            this.particles.push({
+                                x: point.x,
+                                y: point.y,
+                                size: 5,
+                                color: `rgba(255, 255, 100, 0.9)`,
+                                life: 12
+                            });
+                        });
+                    }
+
+                    // Impact sparks
+                    for (let i = 0; i < 20; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        this.particles.push({
+                            x: this.target.x,
+                            y: this.target.y,
+                            vx: Math.cos(angle) * (3 + Math.random() * 4),
+                            vy: Math.sin(angle) * (3 + Math.random() * 4),
+                            size: 4 + Math.random() * 4,
+                            color: `rgba(255, 255, ${150 + Math.random() * 105}, 1)`,
+                            life: 15
+                        });
+                    }
+
+                    if (this.target) {
+                        this.damageEnemy(this.target);
+                        this.target.applyStatus('paralyze', 90);
+                    }
                 }
             }
 
@@ -4880,7 +5171,9 @@
             }
 
             attack(target) {
-                const animation = new AttackAnimation(this, target, this.currentAttack);
+                // Use selectedSkill if set, otherwise fall back to currentAttack
+                const attackName = this.selectedSkill || this.currentAttack || 'Tackle';
+                const animation = new AttackAnimation(this, target, attackName);
                 gameState.activeAnimations.push(animation);
                 soundManager.playSound('shoot');
             }
@@ -4958,9 +5251,23 @@
                     this.isMegaEvolved = true;
                     this.megaForm = formIndex;
                     this.updateSprite();
-                    
+
+                    // Update skills for this mega evolution
+                    const megaEvo = megaEvolutions[formIndex];
+                    if (megaEvo && megaEvo.skills) {
+                        // Set the first skill of the mega form as the selected skill
+                        this.selectedSkill = megaEvo.skills[0];
+                        const skillData = skillDatabase[this.selectedSkill];
+                        if (skillData) {
+                            this.skillMultiplier = skillData.dmgMult || 1.0;
+                            this.skillEffect = skillData.effect || 'projectile';
+                            this.skillColor = skillData.color || '#FFD700';
+                            this.skillStatus = skillData.status || null;
+                        }
+                    }
+
                     soundManager.playSound('megaEvolve');
-                    
+
                     const colors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082', '#9400D3'];
                     for (let i = 0; i < 40; i++) {
                         const angle = (Math.PI * 2 * i) / 40;
@@ -4974,7 +5281,7 @@
                             size: 6
                         });
                     }
-                    
+
                     this.pokemon.damage *= 1.8;
                     this.pokemon.range *= 1.4;
                     this.pokemon.attackSpeed *= 1.25;
@@ -5382,18 +5689,31 @@
         function showTechTree(tower) {
             gameState.selectedTower = tower;
             gameState.selectedPokemon = null;
-            
+
             const techTree = document.getElementById('techTree');
             const evolutionContent = document.getElementById('evolutionContent');
             const towerStats = document.getElementById('towerStats');
-            
+
             techTree.classList.add('active');
             document.getElementById('pokemonList').style.display = 'none';
-            
-            // Get available skills for current evolution
-            const currentEvo = tower.pokemon.evolutionLine[tower.evolutionStage];
-            const availableSkills = currentEvo && currentEvo.skills ? currentEvo.skills : (tower.pokemon.skills || ['Tackle', 'Tackle', 'Tackle', 'Tackle']);
-            if (!tower.selectedSkill) tower.selectedSkill = availableSkills[0];
+
+            // Get available skills for current evolution (including mega evolutions)
+            let availableSkills;
+            if (tower.isMegaEvolved) {
+                // Get skills from the mega evolution
+                const megaEvolutions = tower.pokemon.evolutionLine.filter(e => e.mega);
+                const currentMega = megaEvolutions[tower.megaForm || 0];
+                availableSkills = currentMega && currentMega.skills ? currentMega.skills : (tower.pokemon.skills || ['Tackle', 'Tackle', 'Tackle', 'Tackle']);
+            } else {
+                // Get skills from regular evolution or base Pokemon
+                const currentEvo = tower.pokemon.evolutionLine[tower.evolutionStage];
+                availableSkills = currentEvo && currentEvo.skills ? currentEvo.skills : (tower.pokemon.skills || ['Tackle', 'Tackle', 'Tackle', 'Tackle']);
+            }
+
+            // Ensure selected skill is valid for current form
+            if (!tower.selectedSkill || !availableSkills.includes(tower.selectedSkill)) {
+                tower.selectedSkill = availableSkills[0];
+            }
             const skillData = skillDatabase[tower.selectedSkill] || { dmgMult: 1.0, desc: 'Basic attack' };
 
             // Update tower stats
@@ -5723,6 +6043,7 @@
             if (!gameState.selectedTower) return;
 
             const tower = gameState.selectedTower;
+            const previousSkill = tower.selectedSkill;
             tower.selectedSkill = skillName;
 
             // Get skill data and apply multiplier
@@ -5737,6 +6058,41 @@
                 tower.skillEffect = 'projectile';
                 tower.skillColor = '#FFD700';
                 tower.skillStatus = null;
+            }
+
+            // Visual feedback: skill change animation on tower
+            if (previousSkill !== skillName) {
+                const color = skillData ? skillData.color : '#FFD700';
+
+                // Create swirling skill change particles around tower
+                for (let i = 0; i < 20; i++) {
+                    const angle = (Math.PI * 2 * i) / 20;
+                    gameState.particles.push({
+                        x: tower.x + Math.cos(angle) * 30,
+                        y: tower.y + Math.sin(angle) * 30,
+                        vx: -Math.cos(angle) * 2,
+                        vy: -Math.sin(angle) * 2,
+                        life: 25,
+                        color: color,
+                        size: 5
+                    });
+                }
+
+                // Rising skill name indicator particles
+                for (let i = 0; i < 8; i++) {
+                    gameState.particles.push({
+                        x: tower.x + (Math.random() - 0.5) * 20,
+                        y: tower.y,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: -3 - Math.random() * 2,
+                        life: 30,
+                        color: color,
+                        size: 4 + Math.random() * 3
+                    });
+                }
+
+                // Play a sound effect
+                soundManager.playSound('levelUp');
             }
 
             // Refresh the tech tree UI to show updated selection
